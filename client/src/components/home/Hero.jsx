@@ -72,13 +72,7 @@ export default function Hero() {
               L&apos;essence du luxe
             </p>
           </div>
-          <div
-            className={
-              index === 0
-                ? 'mt-7 flex justify-center sm:mt-8'
-                : 'mt-7 sm:mt-8'
-            }
-          >
+          <div className="mt-7 flex justify-center sm:mt-8">
             <Button as={Link} to="/shop" variant="secondary">
               Découvrir la collection
             </Button>
