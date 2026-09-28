@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /cart
+Disallow: /account
+
+Sitemap: https://mrz-perfume.com/sitemap.xml

@@ -1,0 +1,106 @@
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from 'react'
+import { collections as seedCollections } from '../data/collections'
+import { slugify } from '../utils/productModel'
+
+const CollectionsContext = createContext(null)
+const STORAGE_KEY = 'mrz_collections_v1'
+
+function normalizeCollection(raw) {
+  const name = String(raw?.name || '').trim()
+  const slug = slugify(raw?.slug || name)
+  return {
+    id: String(raw?.id || slug),
+    slug,
+    name,
+    description: String(raw?.description || '').trim(),
+    image: raw?.image || '',
+    tone: raw?.tone || 'dark',
+  }
+}
+
+function loadCollections() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        return parsed.map(normalizeCollection).filter((c) => c.name && c.slug)
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return seedCollections.map(normalizeCollection)
+}
+
+function persist(list) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
+}
+
+export function CollectionsProvider({ children }) {
+  const [collections, setCollections] = useState(() => loadCollections())
+
+  const commit = useCallback((updater) => {
+    setCollections((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      persist(next)
+      return next
+    })
+  }, [])
+
+  const addCollection = useCallback(
+    (data) => {
+      const base = slugify(data.name) || `collection-${Date.now()}`
+      let collection = null
+      commit((prev) => {
+        const taken = new Set(prev.map((c) => c.slug))
+        let slug = base
+        let n = 2
+        while (taken.has(slug)) {
+          slug = `${base}-${n}`
+          n += 1
+        }
+        collection = normalizeCollection({
+          ...data,
+          id: slug,
+          slug,
+        })
+        return [...prev, collection]
+      })
+      return collection
+    },
+    [commit],
+  )
+
+  const deleteCollection = useCallback(
+    (slug) => {
+      commit((prev) => prev.filter((c) => c.slug !== slug && c.id !== slug))
+    },
+    [commit],
+  )
+
+  const value = useMemo(
+    () => ({ collections, addCollection, deleteCollection }),
+    [collections, addCollection, deleteCollection],
+  )
+
+  return (
+    <CollectionsContext.Provider value={value}>
+      {children}
+    </CollectionsContext.Provider>
+  )
+}
+
+export function useCollections() {
+  const ctx = useContext(CollectionsContext)
+  if (!ctx) {
+    throw new Error('useCollections must be used within CollectionsProvider')
+  }
+  return ctx
+}

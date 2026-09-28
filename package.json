@@ -1,0 +1,25 @@
+{
+  "name": "mrz-perfume",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MRZ Luxury Perfume — fullstack e-commerce (React + Vite + Node/Express + Supabase + Tailwind)",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "start": "npm run dev",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "seed": "cd server && npm run seed"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "concurrently": "^8.2.2",
+    "tailwindcss": "^4.3.3"
+  },
+  "dependencies": {
+    "axios": "^1.20.0",
+    "framer-motion": "^13.4.0",
+    "lucide-react": "^1.46.0",
+    "react-router-dom": "^7.18.4"
+  }
+}
