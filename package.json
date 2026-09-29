@@ -8,6 +8,7 @@
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
     "start": "npm run dev",
+    "build": "npm install --include=dev --prefix client && npm run build --prefix client && node scripts/publish-client.mjs",
     "install:all": "npm install && cd server && npm install && cd ../client && npm install",
     "seed": "cd server && npm run seed"
   },

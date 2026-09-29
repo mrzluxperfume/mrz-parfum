@@ -5,4 +5,4 @@ Disallow: /admin
 Disallow: /cart
 Disallow: /account
 
-Sitemap: https://mrz-perfume.com/sitemap.xml
+Sitemap: https://mrz-perfume.fr/sitemap.xml
