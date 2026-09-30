@@ -89,6 +89,7 @@ router.post("/", async (req, res) => {
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      adaptive_pricing: { enabled: false },
       customer_email: email,
       line_items: lineItems,
       success_url: `${clientUrl()}/cart?payment=success&session_id={CHECKOUT_SESSION_ID}`,
