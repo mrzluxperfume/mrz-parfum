@@ -1,1 +1,4 @@
+/api/contact    /.netlify/functions/contact    200
+/api/checkout/confirm    /.netlify/functions/checkout-confirm    200
+/api/checkout    /.netlify/functions/checkout    200
 /*    /index.html   200
