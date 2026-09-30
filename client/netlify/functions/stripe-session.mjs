@@ -1,12 +1,10 @@
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 import Stripe from "stripe";
 
-const here = path.dirname(fileURLToPath(import.meta.url));
 const logoCandidates = [
-  path.join(here, "mrz-nav-logo.png"),
-  path.join(here, "../../public/mrz-nav-logo.png"),
+  path.join(process.cwd(), "client/netlify/functions/mrz-nav-logo.png"),
+  path.join(process.cwd(), "netlify/functions/mrz-nav-logo.png"),
   path.join(process.cwd(), "client/public/mrz-nav-logo.png"),
   path.join(process.cwd(), "public/mrz-nav-logo.png"),
 ];
