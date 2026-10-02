@@ -51,10 +51,13 @@ export async function handler(event) {
   } catch (err) {
     console.error("[contact]", err.message);
     const missing = /Variable manquante/.test(err.message);
+    const auth = /Identifiants Gmail|mot de passe d’application/i.test(err.message);
     return json(500, {
       error: missing
-        ? "L'envoi d'email n'est pas encore configuré (compte Gmail manquant)."
-        : "L'envoi du message a échoué. Réessayez dans un instant.",
+        ? "L'envoi d'email n'est pas encore configuré (SMTP_USER / SMTP_PASS manquants sur Netlify)."
+        : auth
+          ? "Identifiants email invalides. Vérifiez SMTP_USER et SMTP_PASS sur Netlify (mot de passe d’application Gmail)."
+          : "L'envoi du message a échoué. Réessayez dans un instant.",
     });
   }
 }
