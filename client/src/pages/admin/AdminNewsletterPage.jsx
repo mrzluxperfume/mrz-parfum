@@ -333,8 +333,12 @@ function EmailPreview({ form }) {
       <div className="px-4 py-6 sm:px-8">
         <div className="mx-auto max-w-[520px] border border-[#e8e2da] bg-white">
           <div className="border-b border-[#eee8e0] px-8 py-7 text-center">
-            <p className="font-display text-2xl tracking-[0.22em]">MRZ</p>
-            <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-[#8a8278]">
+            <img
+              src="/mrz-logo-footer.jpeg"
+              alt="MRZ Luxury Perfume"
+              className="mx-auto h-[72px] w-[72px] rounded-full object-cover"
+            />
+            <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-[#8a8278]">
               L&apos;essence du luxe
             </p>
           </div>

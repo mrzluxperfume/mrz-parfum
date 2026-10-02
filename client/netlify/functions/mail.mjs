@@ -99,6 +99,7 @@ export function buildNewsletterHtml({
     /\/$/,
     "",
   );
+  const logoUrl = `${site}/mrz-logo-footer.jpeg`;
   const hello = firstName ? `Bonjour ${escapeHtml(firstName)},` : "Bonjour,";
   const code = String(discountCode || "").trim();
   const label = String(discountLabel || "").trim();
@@ -140,8 +141,8 @@ export function buildNewsletterHtml({
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border:1px solid #e8e2da;">
           <tr>
             <td style="padding:28px 36px 18px;border-bottom:1px solid #eee8e0;text-align:center;">
-              <p style="margin:0;font-family:Georgia,serif;font-size:28px;letter-spacing:0.22em;color:#1a1a1a;">MRZ</p>
-              <p style="margin:8px 0 0;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#8a8278;">L'essence du luxe</p>
+              <img src="${escapeHtml(logoUrl)}" alt="MRZ Luxury Perfume" width="72" height="72" style="display:block;margin:0 auto;width:72px;height:72px;border-radius:50%;object-fit:cover;border:0;" />
+              <p style="margin:12px 0 0;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#8a8278;">L'essence du luxe</p>
             </td>
           </tr>
           <tr>
