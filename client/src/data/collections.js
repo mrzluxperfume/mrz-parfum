@@ -37,15 +37,6 @@ export const collections = [
     tone: 'gold',
   },
   {
-    id: 'parfum-rp-paris',
-    slug: 'parfum-rp-paris',
-    name: 'Parfum RP Paris',
-    description: 'Collection Parfum RP Paris',
-    image:
-      'https://mrz-perfume.com/wp-content/uploads/2025/11/Poeme-rouge1.webp',
-    tone: 'dark',
-  },
-  {
     id: 'body-splash',
     slug: 'body-splash',
     name: 'Body Splash',

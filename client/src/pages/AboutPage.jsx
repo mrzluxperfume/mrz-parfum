@@ -11,8 +11,6 @@ export default function AboutPage() {
   const { collections } = useCollections()
   const heroImage =
     getProductBySlug('le-desir')?.image || collections[0]?.image
-  const historyImage =
-    getProductBySlug('nuit-passion')?.image || collections[1]?.image
 
   return (
     <div>
@@ -78,46 +76,6 @@ export default function AboutPage() {
         </Container>
       </section>
 
-      {/* Histoire */}
-      <section className="bg-fog py-16 md:py-24">
-        <Container>
-          <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-14">
-            <motion.div
-              className="overflow-hidden lg:col-span-6"
-              initial={{ opacity: 0, x: -16 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.55 }}
-            >
-              <img
-                src={historyImage}
-                alt=""
-                className="aspect-[4/5] w-full object-cover md:aspect-[5/6]"
-                loading="lazy"
-              />
-            </motion.div>
-
-            <motion.div
-              className="lg:col-span-6"
-              initial={{ opacity: 0, x: 16 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.55, delay: 0.06 }}
-            >
-              <p className="text-[11px] uppercase tracking-[0.2em] text-muted">
-                Maison MRZ
-              </p>
-              <h2 className="mt-4 font-display text-4xl md:text-5xl">
-                {brand.historyTitle}
-              </h2>
-              <p className="mt-6 text-sm leading-relaxed text-ink/75 md:text-base">
-                {brand.history}
-              </p>
-            </motion.div>
-          </div>
-        </Container>
-      </section>
-
       {/* Philosophie */}
       <section className="bg-ink py-20 text-white md:py-28">
         <Container>
@@ -152,8 +110,7 @@ export default function AboutPage() {
                 {brand.collectionLabel}
               </h2>
               <p className="mt-3 max-w-lg text-sm text-ink/70">
-                Découvrez les univers Maison MRZ, Lamas, Osma, Dubai et RP
-                Paris.
+                Découvrez les univers Maison MRZ, Lamas, Osma et Dubai.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 {brand.houses.map((house) => (

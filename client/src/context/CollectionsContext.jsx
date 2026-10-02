@@ -30,7 +30,9 @@ function loadCollections() {
     if (raw) {
       const parsed = JSON.parse(raw)
       if (Array.isArray(parsed)) {
-        return parsed.map(normalizeCollection).filter((c) => c.name && c.slug)
+        return parsed
+          .map(normalizeCollection)
+          .filter((c) => c.name && c.slug && c.slug !== 'parfum-rp-paris')
       }
     }
   } catch {

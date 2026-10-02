@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Search, SlidersHorizontal, X } from 'lucide-react'
 import Container from '../components/ui/Container'
@@ -47,6 +47,19 @@ export default function ShopPage() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
   useEffect(() => {
+    const incoming = searchParams.get('filter') === 'new'
+    setFilters((prev) =>
+      prev.newOnly === incoming
+        ? prev
+        : {
+            ...prev,
+            newOnly: incoming,
+            sort: incoming ? 'newest' : prev.sort,
+          },
+    )
+  }, [searchParams])
+
+  useEffect(() => {
     const next = new URLSearchParams()
     if (filters.newOnly) next.set('filter', 'new')
     if (filters.collection !== 'all') next.set('collection', filters.collection)
@@ -58,7 +71,11 @@ export default function ShopPage() {
   }, [filters, setSearchParams])
 
   const filtered = useMemo(() => {
-    let list = [...allProducts]
+    let list = allProducts.filter(
+      (p) =>
+        p.collectionSlug !== 'parfum-rp-paris' &&
+        p.categorySlug !== 'parfum-rp-paris',
+    )
 
     const q = filters.query.trim().toLowerCase()
     if (q) {
@@ -125,7 +142,6 @@ export default function ShopPage() {
   const activeFilterCount = [
     filters.collection !== 'all',
     filters.minPrice > PRICE_MIN || filters.maxPrice < PRICE_MAX,
-    filters.inStockOnly,
     filters.newOnly,
     filters.query.trim() !== '',
   ].filter(Boolean).length
@@ -390,44 +406,6 @@ function FilterPanel({ filters, update, resetFilters, collections = [] }) {
         </div>
       </div>
 
-      <div className="space-y-3">
-        <h3 className="mb-1 text-[11px] uppercase tracking-[0.14em] text-ink/55">
-          Disponibilité
-        </h3>
-        <FilterCheck
-          checked={filters.inStockOnly}
-          onChange={(checked) => update({ inStockOnly: checked })}
-          label="En stock uniquement"
-        />
-        <FilterCheck
-          checked={filters.newOnly}
-          onChange={(checked) =>
-            update({
-              newOnly: checked,
-              sort: checked ? 'newest' : filters.sort,
-            })
-          }
-          label="Nouveautés"
-        />
-      </div>
-
-      <div className="border-t border-ink/10 pt-6">
-        <p className="mb-3 text-[11px] uppercase tracking-[0.14em] text-ink/55">
-          Accès rapide
-        </p>
-        <ul className="space-y-2">
-          {collections.slice(0, 4).map((c) => (
-            <li key={c.slug}>
-              <Link
-                to={`/collection/${c.slug}`}
-                className="text-sm text-ink/70 transition hover:text-ink"
-              >
-                {c.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   )
 }
@@ -439,20 +417,6 @@ function FilterRadio({ checked, onChange, label }) {
         type="radio"
         checked={checked}
         onChange={onChange}
-        className="size-3.5 accent-forest"
-      />
-      {label}
-    </label>
-  )
-}
-
-function FilterCheck({ checked, onChange, label }) {
-  return (
-    <label className="flex cursor-pointer items-center gap-2.5 text-sm text-ink/80">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
         className="size-3.5 accent-forest"
       />
       {label}

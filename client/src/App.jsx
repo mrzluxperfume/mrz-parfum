@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { CustomerProvider } from './context/CustomerContext'
 import { CatalogProvider } from './context/CatalogContext'
 import { CollectionsProvider } from './context/CollectionsContext'
 import { CartProvider } from './context/CartContext'
@@ -10,8 +11,12 @@ import ScrollToTop from './components/ScrollToTop'
 import HomePage from './pages/HomePage'
 import CategoryPage from './pages/CategoryPage'
 import AboutPage from './pages/AboutPage'
+import HistoryPage from './pages/HistoryPage'
+import TestimonialsPage from './pages/TestimonialsPage'
+import AccountPage from './pages/AccountPage'
 import ContactPage from './pages/ContactPage'
 import BlogPage from './pages/BlogPage'
+import BlogConcentrationsPage from './pages/BlogConcentrationsPage'
 import CollectionsPage from './pages/CollectionsPage'
 import ShopPage from './pages/ShopPage'
 import CartPage from './pages/CartPage'
@@ -30,6 +35,7 @@ export default function App() {
       <CatalogProvider>
         <CollectionsProvider>
         <OrdersProvider>
+          <CustomerProvider>
           <CartProvider>
             <BrowserRouter>
               <ScrollToTop />
@@ -57,15 +63,13 @@ export default function App() {
                   />
                   <Route path="collections" element={<CollectionsPage />} />
                   <Route path="about" element={<AboutPage />} />
+                  <Route path="about/histoire" element={<HistoryPage />} />
+                  <Route path="about/temoignages" element={<TestimonialsPage />} />
                   <Route path="blog" element={<BlogPage />} />
+                  <Route path="blog/concentrations" element={<BlogConcentrationsPage />} />
                   <Route path="contact" element={<ContactPage />} />
                   <Route path="cart" element={<CartPage />} />
-                  <Route
-                    path="account"
-                    element={
-                      <PlaceholderPage title="Compte" description="Phase 9." />
-                    }
-                  />
+                  <Route path="account" element={<AccountPage />} />
                   <Route path="faq" element={<PlaceholderPage title="FAQ" />} />
                   <Route
                     path="terms"
@@ -81,6 +85,7 @@ export default function App() {
               </Routes>
             </BrowserRouter>
           </CartProvider>
+          </CustomerProvider>
         </OrdersProvider>
         </CollectionsProvider>
       </CatalogProvider>

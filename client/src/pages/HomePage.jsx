@@ -1,6 +1,5 @@
 import Hero from '../components/home/Hero'
 import CollectionsGrid from '../components/home/CollectionsGrid'
-import BrandUniverse from '../components/home/BrandUniverse'
 import CategoryNav from '../components/home/CategoryNav'
 import EditorialGrid from '../components/home/EditorialGrid'
 import ProductCarousel from '../components/product/ProductCarousel'
@@ -21,7 +20,6 @@ export default function HomePage() {
       />
       <CollectionsGrid />
       <EditorialGrid />
-      <BrandUniverse />
       <CategoryNav />
     </>
   )

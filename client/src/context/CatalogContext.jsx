@@ -10,6 +10,14 @@ import { normalizeProduct, slugify } from '../utils/productModel'
 
 const CatalogContext = createContext(null)
 const STORAGE_KEY = 'mrz_catalog_v1'
+const HIDDEN_COLLECTION = 'parfum-rp-paris'
+
+function isPublicProduct(product) {
+  return (
+    product.collectionSlug !== HIDDEN_COLLECTION &&
+    product.categorySlug !== HIDDEN_COLLECTION
+  )
+}
 
 function loadCatalog() {
   try {
@@ -47,12 +55,14 @@ export function CatalogProvider({ children }) {
   )
 
   const getFeaturedProducts = useCallback(
-    (limit = 8) => products.filter((p) => p.featured).slice(0, limit),
+    (limit = 8) =>
+      products.filter((p) => p.featured && isPublicProduct(p)).slice(0, limit),
     [products],
   )
 
   const getNewProducts = useCallback(
-    (limit = 8) => products.filter((p) => p.newProduct).slice(0, limit),
+    (limit = 8) =>
+      products.filter((p) => p.newProduct && isPublicProduct(p)).slice(0, limit),
     [products],
   )
 
@@ -60,9 +70,10 @@ export function CatalogProvider({ children }) {
     (category) =>
       products.filter(
         (p) =>
-          p.category === category ||
-          p.categorySlug === category ||
-          p.collectionSlug === category,
+          isPublicProduct(p) &&
+          (p.category === category ||
+            p.categorySlug === category ||
+            p.collectionSlug === category),
       ),
     [products],
   )

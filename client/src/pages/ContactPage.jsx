@@ -72,6 +72,12 @@ export default function ContactPage() {
               Écrivez-nous par email. Nous vous répondrons dans les meilleurs
               délais.
             </p>
+            <a
+              href={`mailto:${brand.email}`}
+              className="mt-5 inline-block text-sm tracking-wide text-ink underline-offset-4 hover:underline"
+            >
+              {brand.email}
+            </a>
           </motion.div>
         </Container>
       </section>

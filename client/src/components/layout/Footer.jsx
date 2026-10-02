@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { brand, navigation } from '../../data/brand'
+import { brand } from '../../data/brand'
 import Container from '../ui/Container'
 
 const infoLinks = [
@@ -7,6 +7,7 @@ const infoLinks = [
   { label: 'Conditions générales', href: '/terms' },
   { label: 'Politique de confidentialité', href: '/privacy' },
   { label: 'Contact', href: '/contact' },
+  { label: 'Compte', href: '/account' },
 ]
 
 function PaymentMethods() {
@@ -131,85 +132,51 @@ function GooglePayMark() {
 export default function Footer() {
   return (
     <footer className="border-t border-ink/10 bg-fog">
-      <Container className="py-14 md:py-20">
-        <div className="grid gap-12 md:grid-cols-12">
-          <div className="md:col-span-4">
-            <Link to="/" className="inline-block">
+      <Container className="py-8 md:py-10">
+        <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4">
+            <Link to="/" className="shrink-0">
               <img
                 src="/mrz-logo-footer.jpeg"
                 alt="MRZ Luxury Perfume"
-                className="h-20 w-20 rounded-full object-cover md:h-24 md:w-24"
+                className="h-14 w-14 rounded-full object-cover"
               />
             </Link>
-            <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-muted">
-              {brand.legalName}
-            </p>
-            <p className="mt-5 max-w-sm text-sm leading-relaxed text-ink/75">
-              {brand.shortDescription}
-            </p>
+            <div>
+              <p className="font-display text-lg tracking-[0.14em] text-ink">MRZ</p>
+              <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-muted">
+                {brand.tagline}
+              </p>
+            </div>
           </div>
 
-          <div className="md:col-span-3">
-            <h3 className="mb-4 text-[11px] uppercase tracking-[0.16em] text-ink">
-              Navigation
-            </h3>
-            <ul className="flex flex-col gap-3">
-              {navigation
-                .filter((item) => item.href)
-                .map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      to={item.href}
-                      className="text-sm text-ink/75 transition hover:text-ink"
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-            </ul>
-          </div>
-
-          <div className="md:col-span-3">
-            <h3 className="mb-4 text-[11px] uppercase tracking-[0.16em] text-ink">
-              Informations
-            </h3>
-            <ul className="flex flex-col gap-3">
+          <nav aria-label="Informations">
+            <ul className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-x-6 sm:gap-y-2">
               {infoLinks.map((item) => (
                 <li key={item.href}>
                   <Link
                     to={item.href}
-                    className="text-sm text-ink/75 transition hover:text-ink"
+                    className="text-[12px] uppercase tracking-[0.12em] text-ink/70 transition hover:text-ink"
                   >
                     {item.label}
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
-
-          <div className="md:col-span-2">
-            <h3 className="mb-4 text-[11px] uppercase tracking-[0.16em] text-ink">
-              Maisons
-            </h3>
-            <ul className="flex flex-col gap-3">
-              {brand.houses.map((house) => (
-                <li key={house} className="text-sm text-ink/75">
-                  {house}
-                </li>
-              ))}
-            </ul>
-            {/* Social links omitted until official MRZ URLs are confirmed */}
-          </div>
+          </nav>
         </div>
 
-        <div className="mt-14 flex flex-col gap-4 border-t border-ink/10 pt-6 text-[11px] uppercase tracking-[0.12em] text-muted md:flex-row md:items-center md:justify-between">
-          <p>
+        <div className="mt-8 flex flex-col gap-4 border-t border-ink/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[11px] uppercase tracking-[0.12em] text-muted">
             © {new Date().getFullYear()} {brand.name}
           </p>
-          <div className="flex flex-col items-end gap-3">
-            <p>{brand.tagline}</p>
-            <PaymentMethods />
-          </div>
+          <a
+            href={`mailto:${brand.email}`}
+            className="text-[11px] tracking-[0.04em] text-ink/70 transition hover:text-ink"
+          >
+            {brand.email}
+          </a>
+          <PaymentMethods />
         </div>
       </Container>
     </footer>

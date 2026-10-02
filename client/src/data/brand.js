@@ -24,7 +24,8 @@ export const brand = {
     ],
     attribution: 'MRZ PERFUME',
   },
-  houses: ['Maison MRZ', 'Lamas', 'Osma', 'Dubai', 'RP Paris'],
+  email: 'mrz.lux.perfume@gmail.com',
+  houses: ['Maison MRZ', 'Lamas', 'Osma', 'Dubai'],
   contactPath: '/contact',
   social: {
     // TODO: confirm official social URLs from MRZ when available
@@ -36,12 +37,26 @@ export const brand = {
 
 export const navigation = [
   { label: 'Accueil', href: '/' },
-  { label: 'Boutique', href: '/shop' },
+  { label: 'Nouveautés', href: '/shop?filter=new' },
   { label: 'Trouver mon parfum', href: '/trouver-mon-parfum' },
   { label: 'Parfums', type: 'dropdown' },
-  { label: 'Collections', href: '/collections' },
-  { label: 'À propos', href: '/about' },
-  { label: 'Blog', href: '/blog' },
+  {
+    label: 'À propos',
+    href: '/about',
+    children: [
+      { label: 'Qui sommes-nous', href: '/about' },
+      { label: 'Notre histoire', href: '/about/histoire' },
+      { label: 'Témoignages', href: '/about/temoignages' },
+    ],
+  },
+  {
+    label: 'Blog',
+    href: '/blog',
+    children: [
+      { label: 'Blog 1', href: '/blog' },
+      { label: 'Blog 2', href: '/blog/concentrations' },
+    ],
+  },
   { label: 'Contact', href: '/contact' },
 ]
 
@@ -50,7 +65,6 @@ export const perfumeMegaLinks = [
   { label: 'Lamas', href: '/category/lamas' },
   { label: 'Parfum Osma', href: '/category/parfum-osma' },
   { label: 'Collection Dubai', href: '/category/collection-dubai' },
-  { label: 'Parfum RP Paris', href: '/category/parfum-rp-paris' },
   { label: 'Body Splash', href: '/category/body-splash' },
   { label: 'Room Diffuseur', href: '/category/room-diffuseur' },
 ]

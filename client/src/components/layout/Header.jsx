@@ -5,6 +5,7 @@ import {
   Menu,
   Search,
   ShoppingBag,
+  User,
   X,
   ChevronDown,
 } from 'lucide-react'
@@ -21,13 +22,14 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
-  const [megaOpen, setMegaOpen] = useState(false)
-  const [mobileParfumsOpen, setMobileParfumsOpen] = useState(false)
+  const [openMenu, setOpenMenu] = useState(null)
+  const [mobileSubmenu, setMobileSubmenu] = useState(null)
 
   useEffect(() => {
     setMobileOpen(false)
     setMobileSearchOpen(false)
-    setMegaOpen(false)
+    setOpenMenu(null)
+    setMobileSubmenu(null)
   }, [location.pathname, location.search])
 
   useEffect(() => {
@@ -82,6 +84,13 @@ export default function Header() {
                 <Search className="size-5" strokeWidth={1.25} />
               )}
             </button>
+            <Link
+              to="/account"
+              className="flex size-11 items-center justify-center"
+              aria-label="Compte client"
+            >
+              <User className="size-6" strokeWidth={1.25} />
+            </Link>
             <Link
               to="/cart"
               className="relative flex size-11 items-center justify-center"
@@ -139,33 +148,51 @@ export default function Header() {
           <nav className="ml-2 flex min-w-0 flex-1 items-center">
             <ul className="flex items-center gap-3 xl:gap-6 2xl:gap-10">
               {navigation.map((item) => {
-                if (item.type === 'dropdown') {
+                const menuLinks = item.children
+                  ? item.children
+                  : item.type === 'dropdown'
+                    ? collections.map((collection) => ({
+                        label: collection.name,
+                        href: `/category/${collection.slug}`,
+                      }))
+                    : null
+
+                if (menuLinks) {
+                  const isOpen = openMenu === item.label
                   return (
                     <li
                       key={item.label}
                       className="relative"
-                      onMouseEnter={() => setMegaOpen(true)}
-                      onMouseLeave={() => setMegaOpen(false)}
+                      onMouseEnter={() => setOpenMenu(item.label)}
+                      onMouseLeave={() => setOpenMenu(null)}
                     >
                       <button
                         type="button"
-                        className="nav-link inline-flex items-center gap-1 py-5"
-                        aria-expanded={megaOpen}
+                        className={`nav-link inline-flex items-center gap-1 py-5${
+                          menuLinks.some((link) => location.pathname === link.href)
+                            ? ' opacity-55'
+                            : ''
+                        }`}
+                        aria-expanded={isOpen}
                         aria-haspopup="true"
-                        onClick={() => setMegaOpen((v) => !v)}
+                        onClick={() =>
+                          setOpenMenu((current) =>
+                            current === item.label ? null : item.label,
+                          )
+                        }
                       >
                         {item.label}
                         <ChevronDown
                           className={cn(
                             'size-3 opacity-60 transition-transform duration-200',
-                            megaOpen && 'rotate-180',
+                            isOpen && 'rotate-180',
                           )}
                           strokeWidth={1.5}
                         />
                       </button>
 
                       <AnimatePresence>
-                        {megaOpen && (
+                        {isOpen && (
                           <motion.div
                             initial={{ opacity: 0, y: 6 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -173,16 +200,16 @@ export default function Header() {
                             transition={{ duration: 0.18 }}
                             className="absolute left-0 top-full z-[100] pt-1"
                           >
-                            <div className="min-w-[260px] border border-ink/10 bg-white p-5 shadow-md">
+                            <div className="min-w-[220px] border border-ink/10 bg-white p-5 shadow-md">
                               <ul className="flex flex-col gap-3">
-                                {collections.map((collection) => (
-                                  <li key={collection.slug}>
+                                {menuLinks.map((link) => (
+                                  <li key={link.href}>
                                     <Link
-                                      to={`/category/${collection.slug}`}
+                                      to={link.href}
                                       className="block text-[12px] uppercase tracking-[0.12em] text-ink transition hover:opacity-55"
-                                      onClick={() => setMegaOpen(false)}
+                                      onClick={() => setOpenMenu(null)}
                                     >
-                                      {collection.name}
+                                      {link.label}
                                     </Link>
                                   </li>
                                 ))}
@@ -200,11 +227,17 @@ export default function Header() {
                     <NavLink
                       to={item.href}
                       end={item.href === '/'}
-                      className={({ isActive }) =>
-                        cn('nav-link inline-flex items-center gap-1 py-5', {
-                          'opacity-55': isActive,
-                        })
-                      }
+                      className={({ isActive }) => {
+                        const onNew =
+                          location.pathname === '/shop' &&
+                          location.search.includes('filter=new')
+                        const active = item.href.includes('filter=new')
+                          ? onNew
+                          : isActive && !onNew
+                        return `nav-link inline-flex items-center gap-1 py-5${
+                          active ? ' opacity-55' : ''
+                        }`
+                      }}
                     >
                       {item.label}
                     </NavLink>
@@ -229,6 +262,9 @@ export default function Header() {
               />
             </form>
 
+            <Link to="/account" className="p-2" aria-label="Compte client">
+              <User className="size-6" strokeWidth={1.25} />
+            </Link>
             <Link to="/cart" className="relative p-2" aria-label="Panier">
               <ShoppingBag className="size-6" strokeWidth={1.25} />
               {count > 0 && (
@@ -284,7 +320,17 @@ export default function Header() {
               <nav className="flex-1 overflow-y-auto px-5 py-4">
                 <ul className="flex flex-col">
                   {navigation.map((item) => {
-                    if (item.type === 'dropdown') {
+                    const menuLinks = item.children
+                      ? item.children
+                      : item.type === 'dropdown'
+                        ? collections.map((collection) => ({
+                            label: collection.name,
+                            href: `/category/${collection.slug}`,
+                          }))
+                        : null
+
+                    if (menuLinks) {
+                      const isOpen = mobileSubmenu === item.label
                       return (
                         <li
                           key={item.label}
@@ -293,34 +339,38 @@ export default function Header() {
                           <button
                             type="button"
                             className="flex min-h-12 w-full items-center justify-between py-3 text-left text-[13px] uppercase tracking-[0.16em]"
-                            onClick={() => setMobileParfumsOpen((v) => !v)}
-                            aria-expanded={mobileParfumsOpen}
+                            onClick={() =>
+                              setMobileSubmenu((current) =>
+                                current === item.label ? null : item.label,
+                              )
+                            }
+                            aria-expanded={isOpen}
                           >
                             {item.label}
                             <ChevronDown
                               className={cn(
                                 'size-4 shrink-0 transition-transform',
-                                mobileParfumsOpen && 'rotate-180',
+                                isOpen && 'rotate-180',
                               )}
                               strokeWidth={1.5}
                             />
                           </button>
                           <AnimatePresence initial={false}>
-                            {mobileParfumsOpen && (
+                            {isOpen && (
                               <motion.ul
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
                                 className="overflow-hidden bg-fog/60"
                               >
-                                {collections.map((collection) => (
-                                  <li key={collection.slug}>
+                                {menuLinks.map((link) => (
+                                  <li key={link.href}>
                                     <Link
-                                      to={`/category/${collection.slug}`}
+                                      to={link.href}
                                       className="block py-3.5 pl-4 pr-2 text-sm text-ink/80"
                                       onClick={() => setMobileOpen(false)}
                                     >
-                                      {collection.name}
+                                      {link.label}
                                     </Link>
                                   </li>
                                 ))}

@@ -6,7 +6,7 @@ const tickerItems = [...topBarMessages, ...topBarMessages, ...topBarMessages]
 export default function TopBar() {
   return (
     <div className="border-b border-ink/5 bg-ink text-white">
-      <div className="relative h-[42px] overflow-hidden md:h-[52px]">
+      <div className="relative h-7 overflow-hidden md:h-8">
         <div className="topbar-marquee absolute inset-y-0 flex items-center whitespace-nowrap">
           {tickerItems.map((message, i) => (
             <span
