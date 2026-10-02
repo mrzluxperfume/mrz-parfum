@@ -119,7 +119,7 @@ export default function AdminNewsletterPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <h2 className="font-display text-3xl md:text-4xl">Newsletter</h2>
         <p className="mt-2 text-sm text-ink/65">
@@ -127,7 +127,7 @@ export default function AdminNewsletterPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="border border-ink/10 bg-white p-5">
           <p className="text-[10px] uppercase tracking-[0.16em] text-muted">
             Clients inscrits

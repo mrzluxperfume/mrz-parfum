@@ -12,7 +12,7 @@ export default function AdminDashboardPage() {
   const revenue = orders.reduce((sum, o) => sum + (o.total || 0), 0)
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <h2 className="font-display text-3xl md:text-4xl">Tableau de bord</h2>
         <p className="mt-2 text-sm text-ink/65">
@@ -20,14 +20,14 @@ export default function AdminDashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat label="Produits" value={products.length} />
         <Stat label="Collections" value={collections.length} />
         <Stat label="Commandes" value={orders.length} />
         <Stat label="Nouvelles" value={newCount} />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Link
           to="/admin/products"
           className="flex items-start gap-4 border border-ink/10 bg-white p-5 transition hover:border-ink/30"

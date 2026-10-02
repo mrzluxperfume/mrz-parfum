@@ -1,14 +1,34 @@
+import { useState } from 'react'
 import { Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { Folders, LayoutDashboard, LogOut, Mail, Package, ShoppingBag } from 'lucide-react'
+import {
+  Folders,
+  LayoutDashboard,
+  LogOut,
+  Mail,
+  Menu,
+  Package,
+  ShoppingBag,
+  X,
+} from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useOrders } from '../context/OrdersContext'
 import { brand } from '../data/brand'
 import NoIndex from '../components/NoIndex'
+import { cn } from '../utils/format'
+
+const navItems = [
+  { to: '/admin', end: true, icon: LayoutDashboard, label: 'Tableau de bord' },
+  { to: '/admin/products', icon: Package, label: 'Produits' },
+  { to: '/admin/collections', icon: Folders, label: 'Collections' },
+  { to: '/admin/orders', icon: ShoppingBag, label: 'Commandes', badge: true },
+  { to: '/admin/newsletter', icon: Mail, label: 'Newsletter' },
+]
 
 export default function AdminLayout() {
   const { isAuthenticated, logout, session } = useAuth()
   const { newCount } = useOrders()
   const navigate = useNavigate()
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   if (!isAuthenticated) {
     return <Navigate to="/admin/login" replace />
@@ -20,79 +40,154 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-fog text-ink">
+    <div className="min-h-screen bg-fog text-ink lg:flex">
       <NoIndex />
-      <header className="border-b border-ink/10 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-muted">
-              Administration
-            </p>
-            <h1 className="font-display text-2xl leading-none">{brand.name}</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="hidden text-xs text-ink/60 sm:inline">
-              {session?.username}
-            </span>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="inline-flex items-center gap-2 border border-ink/15 px-3 py-2 text-[10px] uppercase tracking-[0.16em] transition hover:border-ink hover:bg-ink hover:text-white"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              Déconnexion
-            </button>
-          </div>
-        </div>
-      </header>
 
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[220px_1fr]">
-        <nav className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
-          <AdminNavLink to="/admin" end icon={LayoutDashboard}>
-            Tableau de bord
-          </AdminNavLink>
-          <AdminNavLink to="/admin/products" icon={Package}>
-            Produits
-          </AdminNavLink>
-          <AdminNavLink to="/admin/collections" icon={Folders}>
-            Collections
-          </AdminNavLink>
-          <AdminNavLink to="/admin/orders" icon={ShoppingBag} badge={newCount}>
-            Commandes
-          </AdminNavLink>
-          <AdminNavLink to="/admin/newsletter" icon={Mail}>
-            Newsletter
-          </AdminNavLink>
+      {/* Desktop sidebar */}
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-ink/10 bg-white lg:flex">
+        <div className="border-b border-ink/10 px-5 py-5">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-muted">
+            Administration
+          </p>
+          <p className="mt-1 font-display text-2xl tracking-[0.08em]">
+            {brand.name}
+          </p>
+        </div>
+
+        <nav className="flex flex-1 flex-col gap-1 p-3">
+          {navItems.map((item) => (
+            <AdminNavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              icon={item.icon}
+              badge={item.badge ? newCount : 0}
+            >
+              {item.label}
+            </AdminNavLink>
+          ))}
         </nav>
 
-        <main className="min-w-0">
+        <div className="border-t border-ink/10 p-4">
+          <p className="mb-3 truncate text-xs text-ink/55">{session?.username}</p>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="inline-flex w-full items-center justify-center gap-2 border border-ink/15 px-3 py-2.5 text-[10px] uppercase tracking-[0.16em] transition hover:border-ink hover:bg-ink hover:text-white"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Déconnexion
+          </button>
+        </div>
+      </aside>
+
+      {/* Main column */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Mobile top bar */}
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-ink/10 bg-white px-4 py-3 lg:hidden">
+          <button
+            type="button"
+            className="flex size-10 items-center justify-center"
+            aria-label="Ouvrir le menu"
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu className="size-5" strokeWidth={1.5} />
+          </button>
+          <p className="font-display text-lg tracking-[0.12em]">{brand.name}</p>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex size-10 items-center justify-center"
+            aria-label="Déconnexion"
+          >
+            <LogOut className="size-4" strokeWidth={1.5} />
+          </button>
+        </header>
+
+        <main className="min-h-0 flex-1 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
           <Outlet />
         </main>
       </div>
+
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-ink/40"
+            aria-label="Fermer le menu"
+            onClick={() => setMobileOpen(false)}
+          />
+          <aside className="absolute left-0 top-0 flex h-full w-[min(100%,280px)] flex-col bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-ink/10 px-4 py-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-muted">
+                  Administration
+                </p>
+                <p className="font-display text-xl">{brand.name}</p>
+              </div>
+              <button
+                type="button"
+                className="flex size-10 items-center justify-center"
+                aria-label="Fermer"
+                onClick={() => setMobileOpen(false)}
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
+              {navItems.map((item) => (
+                <AdminNavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  icon={item.icon}
+                  badge={item.badge ? newCount : 0}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {item.label}
+                </AdminNavLink>
+              ))}
+            </nav>
+          </aside>
+        </div>
+      )}
     </div>
   )
 }
 
-function AdminNavLink({ to, end, icon: Icon, badge, children }) {
+function AdminNavLink({ to, end, icon: Icon, badge = 0, children, onClick }) {
   return (
     <NavLink
       to={to}
       end={end}
+      onClick={onClick}
       className={({ isActive }) =>
-        [
-          'inline-flex shrink-0 items-center gap-2 px-3 py-2.5 text-[11px] uppercase tracking-[0.14em] transition',
+        cn(
+          'inline-flex w-full items-center gap-3 px-3 py-3 text-[11px] uppercase tracking-[0.14em] transition',
           isActive
             ? 'bg-forest text-white'
-            : 'bg-white text-ink hover:bg-mist',
-        ].join(' ')
+            : 'text-ink/80 hover:bg-fog hover:text-ink',
+        )
       }
     >
-      <Icon className="h-3.5 w-3.5" />
-      <span>{children}</span>
-      {badge > 0 && (
-        <span className="ml-auto rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] tabular-nums">
-          {badge}
-        </span>
+      {({ isActive }) => (
+        <>
+          <Icon className="h-4 w-4 shrink-0" />
+          <span className="flex-1 text-left">{children}</span>
+          {badge > 0 ? (
+            <span
+              className={cn(
+                'rounded-full px-1.5 py-0.5 text-[10px] tabular-nums',
+                isActive
+                  ? 'bg-white/20 text-white'
+                  : 'bg-forest/10 text-forest',
+              )}
+            >
+              {badge}
+            </span>
+          ) : null}
+        </>
       )}
     </NavLink>
   )
