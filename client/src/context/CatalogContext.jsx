@@ -2,11 +2,18 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from 'react'
 import { products as seedProducts } from '../data/products'
 import { normalizeProduct, slugify } from '../utils/productModel'
+import {
+  isSupabaseConfigured,
+  productFromRow,
+  productToRow,
+  supabase,
+} from '../lib/supabase'
 
 const CatalogContext = createContext(null)
 const STORAGE_KEY = 'mrz_catalog_v1'
@@ -19,7 +26,7 @@ function isPublicProduct(product) {
   )
 }
 
-function loadCatalog() {
+function loadLocalCatalog() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
@@ -34,17 +41,48 @@ function loadCatalog() {
   return seedProducts.map(normalizeProduct)
 }
 
-function persist(list) {
+function persistLocal(list) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
 }
 
 export function CatalogProvider({ children }) {
-  const [products, setProducts] = useState(() => loadCatalog())
+  const [products, setProducts] = useState(() =>
+    isSupabaseConfigured ? [] : loadLocalCatalog(),
+  )
+  const [ready, setReady] = useState(!isSupabaseConfigured)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return undefined
+
+    let cancelled = false
+    ;(async () => {
+      const { data, error: fetchError } = await supabase
+        .from('products')
+        .select('*')
+        .order('id', { ascending: true })
+
+      if (cancelled) return
+      if (fetchError) {
+        setError(fetchError.message)
+        setProducts(loadLocalCatalog())
+        setReady(true)
+        return
+      }
+      setProducts((data || []).map((row) => normalizeProduct(productFromRow(row))))
+      setError('')
+      setReady(true)
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const commit = useCallback((updater) => {
     setProducts((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater
-      persist(next)
+      if (!isSupabaseConfigured) persistLocal(next)
       return next
     })
   }, [])
@@ -79,12 +117,20 @@ export function CatalogProvider({ children }) {
   )
 
   const addProduct = useCallback(
-    (data) => {
+    async (data) => {
       const normalized = normalizeProduct({
         ...data,
-        id: Date.now(),
+        id: data.id || Date.now(),
         slug: data.slug || slugify(data.name),
       })
+
+      if (isSupabaseConfigured && supabase) {
+        const { error: upsertError } = await supabase
+          .from('products')
+          .upsert(productToRow(normalized), { onConflict: 'id' })
+        if (upsertError) throw upsertError
+      }
+
       commit((prev) => [normalized, ...prev])
       return normalized
     },
@@ -92,39 +138,65 @@ export function CatalogProvider({ children }) {
   )
 
   const updateProduct = useCallback(
-    (id, data) => {
+    async (id, data) => {
+      let updated = null
       commit((prev) =>
-        prev.map((p) =>
-          p.id === id
-            ? normalizeProduct({
-                ...p,
-                ...data,
-                id,
-                slug: data.slug || p.slug || slugify(data.name || p.name),
-              })
-            : p,
-        ),
+        prev.map((p) => {
+          if (p.id !== id) return p
+          updated = normalizeProduct({
+            ...p,
+            ...data,
+            id,
+            slug: data.slug || p.slug || slugify(data.name || p.name),
+          })
+          return updated
+        }),
       )
+
+      if (updated && isSupabaseConfigured && supabase) {
+        const { error: upsertError } = await supabase
+          .from('products')
+          .upsert(productToRow(updated), { onConflict: 'id' })
+        if (upsertError) throw upsertError
+      }
     },
     [commit],
   )
 
   const deleteProduct = useCallback(
-    (id) => {
+    async (id) => {
+      if (isSupabaseConfigured && supabase) {
+        const { error: deleteError } = await supabase
+          .from('products')
+          .delete()
+          .eq('id', id)
+        if (deleteError) throw deleteError
+      }
       commit((prev) => prev.filter((p) => p.id !== id))
     },
     [commit],
   )
 
-  const resetCatalog = useCallback(() => {
+  const resetCatalog = useCallback(async () => {
     const next = seedProducts.map(normalizeProduct)
-    persist(next)
+    if (isSupabaseConfigured && supabase) {
+      const rows = next.map(productToRow)
+      const { error: upsertError } = await supabase
+        .from('products')
+        .upsert(rows, { onConflict: 'id' })
+      if (upsertError) throw upsertError
+    } else {
+      persistLocal(next)
+    }
     setProducts(next)
   }, [])
 
   const value = useMemo(
     () => ({
       products,
+      ready,
+      error,
+      source: isSupabaseConfigured ? 'supabase' : 'local',
       getProductBySlug,
       getFeaturedProducts,
       getNewProducts,
@@ -136,6 +208,8 @@ export function CatalogProvider({ children }) {
     }),
     [
       products,
+      ready,
+      error,
       getProductBySlug,
       getFeaturedProducts,
       getNewProducts,

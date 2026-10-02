@@ -2,14 +2,21 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from 'react'
+import {
+  isSupabaseConfigured,
+  orderFromRow,
+  orderToRow,
+  supabase,
+} from '../lib/supabase'
 
 const OrdersContext = createContext(null)
 const STORAGE_KEY = 'mrz_orders_v1'
 
-function loadOrders() {
+function loadLocalOrders() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
@@ -22,23 +29,48 @@ function loadOrders() {
   return []
 }
 
-function persist(list) {
+function persistLocal(list) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
 }
 
 export function OrdersProvider({ children }) {
-  const [orders, setOrders] = useState(() => loadOrders())
+  const [orders, setOrders] = useState(() =>
+    isSupabaseConfigured ? [] : loadLocalOrders(),
+  )
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return undefined
+
+    let cancelled = false
+    ;(async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (cancelled) return
+      if (error) {
+        setOrders(loadLocalOrders())
+        return
+      }
+      setOrders((data || []).map(orderFromRow))
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const commit = useCallback((updater) => {
     setOrders((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater
-      persist(next)
+      if (!isSupabaseConfigured) persistLocal(next)
       return next
     })
   }, [])
 
   const placeOrder = useCallback(
-    ({ customer, items, note = '' }) => {
+    async ({ customer, items, note = '' }) => {
       const lineItems = items.map((item) => ({
         productId: item.id,
         name: item.name,
@@ -63,6 +95,12 @@ export function OrdersProvider({ children }) {
         items: lineItems,
         total,
       }
+
+      if (isSupabaseConfigured && supabase) {
+        const { error } = await supabase.from('orders').insert(orderToRow(order))
+        if (error) throw error
+      }
+
       commit((prev) => [order, ...prev])
       return order
     },
@@ -70,7 +108,14 @@ export function OrdersProvider({ children }) {
   )
 
   const updateOrderStatus = useCallback(
-    (id, status) => {
+    async (id, status) => {
+      if (isSupabaseConfigured && supabase) {
+        const { error } = await supabase
+          .from('orders')
+          .update({ status })
+          .eq('id', id)
+        if (error) throw error
+      }
       commit((prev) =>
         prev.map((o) => (o.id === id ? { ...o, status } : o)),
       )
@@ -79,7 +124,11 @@ export function OrdersProvider({ children }) {
   )
 
   const deleteOrder = useCallback(
-    (id) => {
+    async (id) => {
+      if (isSupabaseConfigured && supabase) {
+        const { error } = await supabase.from('orders').delete().eq('id', id)
+        if (error) throw error
+      }
       commit((prev) => prev.filter((o) => o.id !== id))
     },
     [commit],
@@ -88,6 +137,7 @@ export function OrdersProvider({ children }) {
   const value = useMemo(
     () => ({
       orders,
+      source: isSupabaseConfigured ? 'supabase' : 'local',
       placeOrder,
       updateOrderStatus,
       deleteOrder,

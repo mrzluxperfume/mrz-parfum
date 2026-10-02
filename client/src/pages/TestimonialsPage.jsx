@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Container from '../components/ui/Container'
 import Button from '../components/ui/Button'
+import { isSupabaseConfigured, supabase } from '../lib/supabase'
 
 const STORAGE_KEY = 'mrz_testimonials_v1'
 
-function readTestimonials() {
+function readLocalTestimonials() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     const parsed = raw ? JSON.parse(raw) : []
@@ -16,15 +17,48 @@ function readTestimonials() {
 }
 
 export default function TestimonialsPage() {
-  const [items, setItems] = useState(readTestimonials)
+  const [items, setItems] = useState(() =>
+    isSupabaseConfigured ? [] : readLocalTestimonials(),
+  )
   const [form, setForm] = useState({ name: '', message: '' })
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return undefined
+
+    let cancelled = false
+    ;(async () => {
+      const { data, error: fetchError } = await supabase
+        .from('testimonials')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (cancelled) return
+      if (fetchError) {
+        setItems(readLocalTestimonials())
+        return
+      }
+      setItems(
+        (data || []).map((row) => ({
+          id: row.id,
+          name: row.name,
+          message: row.message,
+          createdAt: row.created_at,
+        })),
+      )
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const update = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }))
   }
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault()
     const name = form.name.trim()
     const message = form.message.trim()
@@ -32,19 +66,45 @@ export default function TestimonialsPage() {
       setError('Merci d’indiquer votre prénom et votre message.')
       return
     }
-    const next = [
-      {
-        id: Date.now(),
-        name,
-        message,
-        createdAt: new Date().toISOString(),
-      },
-      ...items,
-    ]
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-    setItems(next)
-    setForm({ name: '', message: '' })
+
+    setSaving(true)
     setError('')
+    try {
+      if (isSupabaseConfigured && supabase) {
+        const { data, error: insertError } = await supabase
+          .from('testimonials')
+          .insert({ name, message })
+          .select('*')
+          .single()
+        if (insertError) throw insertError
+        setItems((prev) => [
+          {
+            id: data.id,
+            name: data.name,
+            message: data.message,
+            createdAt: data.created_at,
+          },
+          ...prev,
+        ])
+      } else {
+        const next = [
+          {
+            id: Date.now(),
+            name,
+            message,
+            createdAt: new Date().toISOString(),
+          },
+          ...items,
+        ]
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+        setItems(next)
+      }
+      setForm({ name: '', message: '' })
+    } catch (err) {
+      setError(err.message || 'Envoi impossible pour le moment.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -115,7 +175,9 @@ export default function TestimonialsPage() {
               />
             </label>
             {error && <p className="text-sm text-red-700">{error}</p>}
-            <Button type="submit">Publier</Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Publication…' : 'Publier'}
+            </Button>
           </motion.form>
         </Container>
       </section>

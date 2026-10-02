@@ -28,16 +28,14 @@ export const brand = {
   houses: ['Maison MRZ', 'Lamas', 'Osma', 'Dubai'],
   contactPath: '/contact',
   social: {
-    // TODO: confirm official social URLs from MRZ when available
-    instagram: null,
-    facebook: null,
-    tiktok: null,
+    instagram: 'https://www.instagram.com/mrz_perfume_/',
+    snapchat: 'https://snapchat.com/t/KHCSREPm',
+    tiktok: 'https://www.tiktok.com/@mrz.perfume_?_r=1&_t=ZG-9AE5Lx04gXx',
   },
 }
 
 export const navigation = [
   { label: 'Accueil', href: '/' },
-  { label: 'Nouveautés', href: '/shop?filter=new' },
   { label: 'Trouver mon parfum', href: '/trouver-mon-parfum' },
   { label: 'Parfums', type: 'dropdown' },
   {
