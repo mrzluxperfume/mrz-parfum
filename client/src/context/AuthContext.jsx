@@ -19,7 +19,7 @@ function readSession() {
       localStorage.removeItem(STORAGE_KEY)
       return null
     }
-    return parsed
+    return { ...parsed, token: parsed.token || ADMIN_PASS }
   } catch {
     return null
   }
@@ -43,6 +43,7 @@ export function AuthProvider({ children }) {
       const next = {
         ok: true,
         username: ADMIN_USER,
+        token: ADMIN_PASS,
         loggedInAt: new Date().toISOString(),
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
@@ -61,6 +62,7 @@ export function AuthProvider({ children }) {
     () => ({
       isAuthenticated: Boolean(session?.ok),
       session,
+      adminToken: session?.token || ADMIN_PASS || '',
       login,
       logout,
     }),

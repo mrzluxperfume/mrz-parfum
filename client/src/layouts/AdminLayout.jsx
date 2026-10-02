@@ -1,5 +1,5 @@
 import { Navigate, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { Folders, LayoutDashboard, LogOut, Package, ShoppingBag } from 'lucide-react'
+import { Folders, LayoutDashboard, LogOut, Mail, Package, ShoppingBag } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useOrders } from '../context/OrdersContext'
 import { brand } from '../data/brand'
@@ -59,6 +59,9 @@ export default function AdminLayout() {
           </AdminNavLink>
           <AdminNavLink to="/admin/orders" icon={ShoppingBag} badge={newCount}>
             Commandes
+          </AdminNavLink>
+          <AdminNavLink to="/admin/newsletter" icon={Mail}>
+            Newsletter
           </AdminNavLink>
         </nav>
 

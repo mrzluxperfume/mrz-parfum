@@ -29,6 +29,7 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminProductsPage from './pages/admin/AdminProductsPage'
 import AdminOrdersPage from './pages/admin/AdminOrdersPage'
 import AdminCollectionsPage from './pages/admin/AdminCollectionsPage'
+import AdminNewsletterPage from './pages/admin/AdminNewsletterPage'
 
 export default function App() {
   return (
@@ -47,6 +48,7 @@ export default function App() {
                   <Route path="products" element={<AdminProductsPage />} />
                   <Route path="collections" element={<AdminCollectionsPage />} />
                   <Route path="orders" element={<AdminOrdersPage />} />
+                  <Route path="newsletter" element={<AdminNewsletterPage />} />
                 </Route>
 
                 <Route element={<MainLayout />}>

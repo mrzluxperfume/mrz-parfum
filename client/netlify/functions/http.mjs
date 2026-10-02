@@ -12,8 +12,8 @@ export function json(statusCode, payload) {
     headers: {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, X-Mrz-Admin",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     },
     body: JSON.stringify(payload),
   };

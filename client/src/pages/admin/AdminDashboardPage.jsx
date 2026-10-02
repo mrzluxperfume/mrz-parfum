@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Folders, Package, ShoppingBag } from 'lucide-react'
+import { Folders, Mail, Package, ShoppingBag } from 'lucide-react'
 import { useCatalog } from '../../context/CatalogContext'
 import { useCollections } from '../../context/CollectionsContext'
 import { useOrders } from '../../context/OrdersContext'
@@ -63,6 +63,20 @@ export default function AdminDashboardPage() {
             <p className="text-[11px] uppercase tracking-[0.14em]">Commandes</p>
             <p className="mt-1 text-sm text-ink/70">
               Total encaissé (local) : {formatPrice(revenue)}
+            </p>
+          </div>
+        </Link>
+        <Link
+          to="/admin/newsletter"
+          className="flex items-start gap-4 border border-ink/10 bg-white p-5 transition hover:border-ink/30"
+        >
+          <Mail className="mt-0.5 h-5 w-5 text-forest" />
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.14em]">
+              Newsletter
+            </p>
+            <p className="mt-1 text-sm text-ink/70">
+              Emails clients et offres de remise.
             </p>
           </div>
         </Link>

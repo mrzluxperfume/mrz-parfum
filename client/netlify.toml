@@ -13,6 +13,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/newsletter"
+  to = "/.netlify/functions/newsletter"
+  status = 200
+
+[[redirects]]
   from = "/api/checkout/confirm"
   to = "/.netlify/functions/checkout-confirm"
   status = 200
