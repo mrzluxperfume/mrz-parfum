@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { collections } from '../src/data/collections.js'
 import { products } from '../src/data/products.js'
 
-const site = 'https://mrz-perfume.fr'
+const site = 'https://www.mrz-perfume.fr'
 const lastmod = new Date().toISOString().slice(0, 10)
 const HIDDEN_COLLECTION = 'parfum-rp-paris'
 

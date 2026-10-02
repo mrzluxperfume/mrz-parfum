@@ -15,4 +15,4 @@ Disallow: /api/
 Disallow: /*?*payment=
 Disallow: /*?*session_id=
 
-Sitemap: https://mrz-perfume.fr/sitemap.xml
+Sitemap: https://www.mrz-perfume.fr/sitemap.xml
