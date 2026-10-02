@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Button from '../../components/ui/Button'
+import NoIndex from '../../components/NoIndex'
 import { useAuth } from '../../context/AuthContext'
 import { brand } from '../../data/brand'
 
@@ -28,6 +29,7 @@ export default function AdminLoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-fog px-4">
+      <NoIndex />
       <motion.form
         onSubmit={handleSubmit}
         initial={{ opacity: 0, y: 16 }}

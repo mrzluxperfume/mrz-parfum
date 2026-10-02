@@ -8,6 +8,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/auth"
+  to = "/.netlify/functions/customer-auth"
+  status = 200
+
+[[redirects]]
   from = "/api/checkout/confirm"
   to = "/.netlify/functions/checkout-confirm"
   status = 200

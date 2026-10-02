@@ -3,6 +3,7 @@ import { Folders, LayoutDashboard, LogOut, Package, ShoppingBag } from 'lucide-r
 import { useAuth } from '../context/AuthContext'
 import { useOrders } from '../context/OrdersContext'
 import { brand } from '../data/brand'
+import NoIndex from '../components/NoIndex'
 
 export default function AdminLayout() {
   const { isAuthenticated, logout, session } = useAuth()
@@ -20,6 +21,7 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-fog text-ink">
+      <NoIndex />
       <header className="border-b border-ink/10 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <div>

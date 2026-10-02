@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { Trash2 } from 'lucide-react'
 import Container from '../components/ui/Container'
 import Button from '../components/ui/Button'
+import NoIndex from '../components/NoIndex'
 import { useCart } from '../context/CartContext'
 import { useOrders } from '../context/OrdersContext'
 import api from '../services/api'
@@ -101,6 +102,7 @@ export default function CartPage() {
   if (status === 'paying' && searchParams.get('payment') === 'success') {
     return (
       <section className="py-16 md:py-24">
+        <NoIndex />
         <Container className="max-w-lg text-center">
           <h1 className="font-display text-4xl">Confirmation du paiement</h1>
           <p className="mt-4 text-sm text-ink/70">
@@ -114,6 +116,7 @@ export default function CartPage() {
   if (status === 'success') {
     return (
       <section className="py-16 md:py-24">
+        <NoIndex />
         <Container className="max-w-lg text-center">
           <p className="text-[11px] uppercase tracking-[0.2em] text-muted">
             Commande envoyée
@@ -144,6 +147,7 @@ export default function CartPage() {
 
   return (
     <div>
+      <NoIndex />
       <section className="border-b border-ink/5 bg-fog py-12 md:py-16">
         <Container>
           <h1 className="font-display text-4xl md:text-5xl">Panier</h1>

@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import TopBar from '../components/layout/TopBar'
 import Header from '../components/layout/Header'
 import Footer from '../components/layout/Footer'
+import CookieConsent from '../components/CookieConsent'
 
 export default function MainLayout() {
   return (
@@ -12,6 +13,7 @@ export default function MainLayout() {
         <Outlet />
       </main>
       <Footer />
+      <CookieConsent />
     </div>
   )
 }

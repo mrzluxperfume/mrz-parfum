@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Container from '../components/ui/Container'
 import Button from '../components/ui/Button'
+import NoIndex from '../components/NoIndex'
 import { useCustomer } from '../context/CustomerContext'
 
 const empty = {
@@ -16,27 +17,34 @@ export default function AccountPage() {
   const [mode, setMode] = useState('login')
   const [form, setForm] = useState(empty)
   const [error, setError] = useState('')
+  const [pending, setPending] = useState(false)
 
   const update = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }))
   }
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault()
-    const result =
-      mode === 'register'
-        ? register(form)
-        : login(form.email, form.password)
-    if (!result.ok) {
-      setError(result.error)
-      return
-    }
+    setPending(true)
     setError('')
-    setForm(empty)
+    try {
+      const result =
+        mode === 'register'
+          ? await register(form)
+          : await login(form.email, form.password)
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+      setForm(empty)
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
     <section className="py-14 md:py-20">
+      <NoIndex />
       <Container className="max-w-lg">
         <p className="text-[11px] uppercase tracking-[0.22em] text-muted">
           MRZ Perfume
@@ -50,6 +58,9 @@ export default function AccountPage() {
               {customer.lastName ? ` ${customer.lastName}` : ''}
             </p>
             <p className="mt-3 text-sm text-ink/70">{customer.email}</p>
+            <p className="mt-2 text-xs text-ink/50">
+              Session sécurisée — le mot de passe n’est jamais stocké en clair.
+            </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Button as={Link} to="/shop" variant="outline">
                 Voir les parfums
@@ -133,13 +144,25 @@ export default function AccountPage() {
                   value={form.password}
                   onChange={update('password')}
                   className="field-input"
-                  autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                  autoComplete={
+                    mode === 'register' ? 'new-password' : 'current-password'
+                  }
+                  minLength={8}
                   required
                 />
+                {mode === 'register' && (
+                  <span className="mt-1.5 block text-xs text-ink/50">
+                    Au moins 8 caractères.
+                  </span>
+                )}
               </label>
               {error && <p className="text-sm text-red-700">{error}</p>}
-              <Button type="submit">
-                {mode === 'register' ? 'Créer mon compte' : 'Se connecter'}
+              <Button type="submit" disabled={pending}>
+                {pending
+                  ? 'Patientez…'
+                  : mode === 'register'
+                    ? 'Créer mon compte'
+                    : 'Se connecter'}
               </Button>
             </form>
           </>

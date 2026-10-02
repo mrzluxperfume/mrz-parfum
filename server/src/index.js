@@ -7,6 +7,7 @@ import productsRouter from "./routes/products.js";
 import categoriesRouter from "./routes/categories.js";
 import contactRouter from "./routes/contact.js";
 import checkoutRouter from "./routes/checkout.js";
+import authRouter from "./routes/auth.js";
 import { loadLocalProducts } from "./data.js";
 
 const app = express();
@@ -35,6 +36,7 @@ app.use("/api/products", productsRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/contact", contactRouter);
 app.use("/api/checkout", checkoutRouter);
+app.use("/api/auth", authRouter);
 
 // 404
 app.use((req, res) => res.status(404).json({ error: "Not found", path: req.path }));

@@ -22,6 +22,7 @@ import ShopPage from './pages/ShopPage'
 import CartPage from './pages/CartPage'
 import FindPerfumePage from './pages/FindPerfumePage'
 import PlaceholderPage from './pages/PlaceholderPage'
+import PrivacyPage from './pages/PrivacyPage'
 import ProductPage from './pages/ProductPage'
 import AdminLoginPage from './pages/admin/AdminLoginPage'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
@@ -75,12 +76,7 @@ export default function App() {
                     path="terms"
                     element={<PlaceholderPage title="Conditions générales" />}
                   />
-                  <Route
-                    path="privacy"
-                    element={
-                      <PlaceholderPage title="Politique de confidentialité" />
-                    }
-                  />
+                  <Route path="privacy" element={<PrivacyPage />} />
                 </Route>
               </Routes>
             </BrowserRouter>

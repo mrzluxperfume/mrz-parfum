@@ -1,8 +1,18 @@
+# MRZ Perfume — robots.txt
+# Pages privées / sensibles exclues de l'indexation
+
 User-agent: *
 Allow: /
 
+# Zones privées (comptes, panier, admin)
 Disallow: /admin
+Disallow: /admin/
 Disallow: /cart
 Disallow: /account
+Disallow: /api/
+
+# Paramètres de paiement / session (non indexables)
+Disallow: /*?*payment=
+Disallow: /*?*session_id=
 
 Sitemap: https://mrz-perfume.fr/sitemap.xml

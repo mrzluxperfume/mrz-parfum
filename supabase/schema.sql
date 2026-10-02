@@ -118,5 +118,5 @@ create policy "testimonials_all" on public.testimonials
   for all using (true) with check (true);
 
 drop policy if exists "customers_all" on public.customers;
-create policy "customers_all" on public.customers
-  for all using (true) with check (true);
+-- Pas d'accès public aux comptes : lecture/écriture uniquement via service_role (API).
+-- RLS activé sans policy = refus pour la clé anon.

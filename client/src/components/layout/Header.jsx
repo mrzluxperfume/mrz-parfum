@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -11,25 +11,104 @@ import {
 } from 'lucide-react'
 import { navigation, brand } from '../../data/brand'
 import { useCollections } from '../../context/CollectionsContext'
+import { useCatalog } from '../../context/CatalogContext'
 import { useCart } from '../../context/CartContext'
-import { cn } from '../../utils/format'
+import { cn, formatPrice } from '../../utils/format'
+
+const SEARCH_LIMIT = 6
+
+function matchesQuery(product, q) {
+  return (
+    product.name.toLowerCase().includes(q) ||
+    (product.brand || '').toLowerCase().includes(q) ||
+    (product.category || '').toLowerCase().includes(q) ||
+    (product.collection || '').toLowerCase().includes(q)
+  )
+}
+
+function SearchResults({ results, query, onSelect, onSeeAll }) {
+  if (!query.trim()) return null
+
+  return (
+    <div className="max-h-[70vh] overflow-y-auto border border-ink/10 bg-white shadow-md">
+      {results.length === 0 ? (
+        <p className="px-4 py-3 text-sm text-ink/55">Aucun produit trouvé</p>
+      ) : (
+        <ul>
+          {results.map((product) => (
+            <li key={product.id}>
+              <Link
+                to={`/product/${product.slug}`}
+                onClick={onSelect}
+                className="flex items-center gap-3 border-b border-ink/5 px-3 py-2.5 transition hover:bg-fog"
+              >
+                <img
+                  src={product.image}
+                  alt=""
+                  className="size-12 shrink-0 object-cover"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm text-ink">
+                    {product.name}
+                  </span>
+                  <span className="mt-0.5 block text-[11px] uppercase tracking-[0.1em] text-muted">
+                    {product.collection || product.brand}
+                  </span>
+                </span>
+                <span className="shrink-0 text-sm text-ink">
+                  {formatPrice(product.price)}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      <button
+        type="button"
+        onClick={onSeeAll}
+        className="w-full border-t border-ink/10 px-4 py-3 text-left text-[11px] uppercase tracking-[0.14em] text-ink/70 transition hover:bg-fog hover:text-ink"
+      >
+        Voir tous les résultats
+      </button>
+    </div>
+  )
+}
 
 export default function Header() {
   const { count } = useCart()
   const { collections } = useCollections()
+  const { products } = useCatalog()
   const navigate = useNavigate()
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
   const [openMenu, setOpenMenu] = useState(null)
   const [mobileSubmenu, setMobileSubmenu] = useState(null)
+  const desktopSearchRef = useRef(null)
+  const mobileSearchRef = useRef(null)
+
+  const searchResults = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return []
+    return products
+      .filter(
+        (p) =>
+          p.collectionSlug !== 'parfum-rp-paris' &&
+          p.categorySlug !== 'parfum-rp-paris' &&
+          matchesQuery(p, q),
+      )
+      .slice(0, SEARCH_LIMIT)
+  }, [products, query])
 
   useEffect(() => {
     setMobileOpen(false)
     setMobileSearchOpen(false)
     setOpenMenu(null)
     setMobileSubmenu(null)
+    setSearchOpen(false)
+    setQuery('')
   }, [location.pathname, location.search])
 
   useEffect(() => {
@@ -41,12 +120,41 @@ export default function Header() {
     }
   }, [mobileOpen])
 
+  useEffect(() => {
+    if (!searchOpen) return undefined
+    const onPointerDown = (event) => {
+      const inDesktop = desktopSearchRef.current?.contains(event.target)
+      const inMobile = mobileSearchRef.current?.contains(event.target)
+      if (!inDesktop && !inMobile) setSearchOpen(false)
+    }
+    const onKey = (event) => {
+      if (event.key === 'Escape') setSearchOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [searchOpen])
+
+  const closeSearch = () => {
+    setSearchOpen(false)
+    setMobileSearchOpen(false)
+    setMobileOpen(false)
+    setQuery('')
+  }
+
   const submitSearch = (e) => {
     e?.preventDefault()
     const q = query.trim()
     navigate(q ? `/shop?q=${encodeURIComponent(q)}` : '/shop')
-    setMobileSearchOpen(false)
-    setMobileOpen(false)
+    closeSearch()
+  }
+
+  const onQueryChange = (value) => {
+    setQuery(value)
+    setSearchOpen(value.trim().length > 0)
   }
 
   return (
@@ -109,29 +217,41 @@ export default function Header() {
         {/* Mobile search — compact under header */}
         <AnimatePresence>
           {mobileSearchOpen && (
-            <motion.form
+            <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="overflow-hidden pb-3 lg:hidden"
-              onSubmit={submitSearch}
+              className="overflow-visible pb-3 lg:hidden"
+              ref={mobileSearchRef}
             >
-              <div className="relative">
+              <form onSubmit={submitSearch} className="relative">
                 <Search
                   className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink/45"
                   strokeWidth={1.5}
                 />
                 <input
                   autoFocus
-                  type="text"
+                  type="search"
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => onQueryChange(e.target.value)}
+                  onFocus={() => query.trim() && setSearchOpen(true)}
                   placeholder="Rechercher un parfum..."
                   className="w-full border border-ink/25 bg-white py-3 pl-10 pr-3 text-sm text-ink outline-none placeholder:text-ink/40 focus:border-ink"
+                  autoComplete="off"
                 />
-              </div>
-            </motion.form>
+                {searchOpen && (
+                  <div className="absolute left-0 right-0 top-full z-[120] mt-1">
+                    <SearchResults
+                      results={searchResults}
+                      query={query}
+                      onSelect={closeSearch}
+                      onSeeAll={submitSearch}
+                    />
+                  </div>
+                )}
+              </form>
+            </motion.div>
           )}
         </AnimatePresence>
 
@@ -248,18 +368,34 @@ export default function Header() {
           </nav>
 
           <div className="ml-auto flex shrink-0 items-center gap-2">
-            <form onSubmit={submitSearch} className="relative">
+            <form
+              onSubmit={submitSearch}
+              className="relative"
+              ref={desktopSearchRef}
+            >
               <Search
                 className="pointer-events-none absolute left-3 top-1/2 size-[17px] -translate-y-1/2 text-ink/45"
                 strokeWidth={1.5}
               />
               <input
-                type="text"
+                type="search"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => onQueryChange(e.target.value)}
+                onFocus={() => query.trim() && setSearchOpen(true)}
                 placeholder="Rechercher..."
                 className="w-[140px] border border-ink bg-white py-2 pl-10 pr-3 text-[13px] text-ink outline-none placeholder:text-ink/50 focus:border-ink xl:w-[180px] 2xl:w-[220px]"
+                autoComplete="off"
               />
+              {searchOpen && (
+                <div className="absolute right-0 top-full z-[120] mt-1 w-[min(92vw,360px)]">
+                  <SearchResults
+                    results={searchResults}
+                    query={query}
+                    onSelect={closeSearch}
+                    onSeeAll={submitSearch}
+                  />
+                </div>
+              )}
             </form>
 
             <Link to="/account" className="p-2" aria-label="Compte client">
