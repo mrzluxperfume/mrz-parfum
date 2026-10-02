@@ -1,8 +1,5 @@
-# API
+# API only — SPA fallback is in netlify.toml (after sitemap rule)
 /api/contact  /.netlify/functions/contact  200
 /api/auth  /.netlify/functions/customer-auth  200
 /api/checkout/confirm  /.netlify/functions/checkout-confirm  200
 /api/checkout  /.netlify/functions/checkout  200
-
-# SPA fallback — does NOT override real files like /sitemap.xml or /robots.txt
-/*    /index.html   200

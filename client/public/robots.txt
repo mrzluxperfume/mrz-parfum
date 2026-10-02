@@ -9,4 +9,4 @@ Disallow: /account
 User-agent: Googlebot
 Allow: /
 
-Sitemap: https://www.mrz-perfume.fr/sitemap.xml
+Sitemap: https://www.mrz-perfume.fr/sitemap-index.xml
