@@ -140,9 +140,8 @@ export function buildNewsletterHtml({
       <td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border:1px solid #e8e2da;">
           <tr>
-            <td style="padding:28px 36px 18px;border-bottom:1px solid #eee8e0;text-align:center;">
-              <img src="${escapeHtml(logoUrl)}" alt="MRZ Luxury Perfume" width="72" height="72" style="display:block;margin:0 auto;width:72px;height:72px;border-radius:50%;object-fit:cover;border:0;" />
-              <p style="margin:12px 0 0;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#8a8278;">L'essence du luxe</p>
+            <td style="padding:28px 36px 20px;border-bottom:1px solid #eee8e0;text-align:center;">
+              <img src="${escapeHtml(logoUrl)}" alt="MRZ Perfume" width="72" height="72" style="display:block;margin:0 auto;width:72px;height:72px;border-radius:50%;object-fit:cover;border:0;" />
             </td>
           </tr>
           <tr>
@@ -159,10 +158,15 @@ export function buildNewsletterHtml({
             </td>
           </tr>
           <tr>
-            <td style="padding:20px 36px;background:#1a1a1a;text-align:center;">
-              <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#d9d2c8;">MRZ Perfume</p>
-              <p style="margin:0;font-size:12px;line-height:1.5;color:#9a9288;">
+            <td style="padding:22px 36px;background:#1a1a1a;text-align:center;">
+              <p style="margin:0 0 8px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#d9d2c8;">MRZ Perfume</p>
+              <p style="margin:0 0 8px;font-size:12px;line-height:1.5;color:#9a9288;">
+                61 rue Racine, 69100 Villeurbanne<br />
                 <a href="${site}" style="color:#d9d2c8;text-decoration:none;">mrz-perfume.fr</a>
+              </p>
+              <p style="margin:0;font-size:11px;line-height:1.5;color:#7a7268;">
+                Vous recevez cet email car vous avez un compte sur MRZ Perfume.<br />
+                <a href="mailto:mrz.lux.perfume@gmail.com?subject=Desinscription%20newsletter" style="color:#bdb5aa;text-decoration:underline;">Se désinscrire</a>
               </p>
             </td>
           </tr>
@@ -201,10 +205,13 @@ export async function sendNewsletterEmail({
     title || "",
     "",
     message || "",
-    discountCode ? `\nCode remise : ${discountCode}` : "",
+    discountCode ? `\nCode : ${discountCode}` : "",
     discountLabel || "",
     "",
     ctaUrl || process.env.CLIENT_URL || "https://www.mrz-perfume.fr/shop",
+    "",
+    "MRZ Perfume — 61 rue Racine, 69100 Villeurbanne",
+    "Se désinscrire : mailto:mrz.lux.perfume@gmail.com?subject=Desinscription%20newsletter",
   ]
     .filter(Boolean)
     .join("\n");
@@ -213,9 +220,15 @@ export async function sendNewsletterEmail({
     await transport.sendMail({
       from: `"MRZ Perfume" <${user}>`,
       to,
+      replyTo: user,
       subject: String(subject || title || "MRZ Perfume").slice(0, 180),
       text,
       html,
+      headers: {
+        "List-Unsubscribe": `<mailto:mrz.lux.perfume@gmail.com?subject=Desinscription%20newsletter>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        "X-Mailer": "MRZ Perfume",
+      },
     });
   } catch (err) {
     throw mapSmtpError(err);
