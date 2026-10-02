@@ -48,7 +48,10 @@ export async function handler(event) {
 
   const supabase = getSupabase();
   if (!supabase) {
-    return json(503, { error: "Authentification indisponible." });
+    return json(503, {
+      error:
+        "Authentification indisponible. Ajoutez SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sur Netlify.",
+    });
   }
 
   try {

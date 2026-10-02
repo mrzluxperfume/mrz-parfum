@@ -14,7 +14,11 @@ const LEGACY_ACCOUNTS_KEY = 'mrz_customers_v1'
 const SESSION_KEY = 'mrz_customer_session'
 
 function authEndpoint() {
-  const base = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')
+  const base = (
+    import.meta.env.PROD
+      ? '/api'
+      : import.meta.env.VITE_API_URL || '/api'
+  ).replace(/\/$/, '')
   return `${base}/auth`
 }
 
