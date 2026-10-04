@@ -36,7 +36,7 @@ export default function AdminDashboardPage() {
           <div>
             <p className="text-[11px] uppercase tracking-[0.14em]">Produits</p>
             <p className="mt-1 text-sm text-ink/70">
-              Ajouter, modifier et définir 50 ml / 100 ml.
+              Ajouter, modifier et saisir les formats (ml).
             </p>
           </div>
         </Link>

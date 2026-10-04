@@ -1,3 +1,4 @@
+/** @deprecated kept for any leftover imports — volumes are free-form now */
 const SIZE_OPTIONS = ['50 ml', '100 ml']
 
 export { SIZE_OPTIONS }
@@ -12,61 +13,44 @@ export function slugify(text) {
     .replace(/(^-|-$)/g, '')
 }
 
-function emptySizes(basePrice = 0) {
-  return SIZE_OPTIONS.map((volume) => ({
-    volume,
-    price: Number(basePrice) || 0,
-    enabled: false,
-  }))
+/** Normalize user input like "75", "75ml", "75 ML" → "75 ml" */
+export function formatVolume(raw) {
+  const s = String(raw || '').trim()
+  if (!s) return ''
+  const match = s.match(/^(\d+(?:[.,]\d+)?)\s*m?l?$/i)
+  if (match) {
+    const n = match[1].replace(',', '.')
+    return `${n} ml`
+  }
+  return s
 }
 
-function matchKnownVolume(rawVolume) {
-  const v = String(rawVolume || '')
-    .toLowerCase()
-    .replace(/\s+/g, '')
-  if (v.includes('50')) return '50 ml'
-  if (v.includes('100')) return '100 ml'
-  return null
+function normalizeSizeEntry(s, basePrice = 0) {
+  const volume = formatVolume(s?.volume)
+  if (!volume) return null
+  return {
+    volume,
+    price: Number(s?.price) || basePrice || 0,
+    enabled: s?.enabled !== false,
+  }
 }
 
 export function normalizeProduct(raw) {
   if (!raw) return null
 
   const basePrice = Number(raw.price) || 0
-  let sizes
+  let sizes = []
 
   if (Array.isArray(raw.sizes) && raw.sizes.length > 0) {
-    const map = new Map(
-      raw.sizes.map((s) => {
-        const volume =
-          s.volume === '50 ml' || String(s.volume).includes('50')
-            ? '50 ml'
-            : '100 ml'
-        return [
-          volume,
-          {
-            volume,
-            price: Number(s.price) || basePrice,
-            enabled: s.enabled !== false,
-          },
-        ]
-      }),
-    )
-    sizes = SIZE_OPTIONS.map(
-      (volume) =>
-        map.get(volume) || {
-          volume,
-          price: basePrice,
-          enabled: false,
-        },
-    )
-  } else {
-    sizes = emptySizes(basePrice)
-    const known = matchKnownVolume(raw.volume)
-    if (known) {
-      sizes = sizes.map((s) =>
-        s.volume === known ? { ...s, enabled: true, price: basePrice } : s,
-      )
+    sizes = raw.sizes
+      .map((s) => normalizeSizeEntry(s, basePrice))
+      .filter(Boolean)
+  }
+
+  if (sizes.length === 0 && raw.volume) {
+    const volume = formatVolume(raw.volume)
+    if (volume) {
+      sizes = [{ volume, price: basePrice, enabled: true }]
     }
   }
 

@@ -4,7 +4,20 @@ import Button from '../../components/ui/Button'
 import { useCatalog } from '../../context/CatalogContext'
 import { useCollections } from '../../context/CollectionsContext'
 import { formatPrice } from '../../utils/format'
-import { SIZE_OPTIONS, slugify } from '../../utils/productModel'
+import { formatVolume, slugify } from '../../utils/productModel'
+
+let sizeKey = 0
+const nextSizeKey = () => {
+  sizeKey += 1
+  return `size-${sizeKey}`
+}
+
+const emptySize = (volume = '', price = '', enabled = true) => ({
+  key: nextSizeKey(),
+  volume,
+  price,
+  enabled,
+})
 
 const emptyForm = (collections = []) => ({
   name: '',
@@ -14,11 +27,7 @@ const emptyForm = (collections = []) => ({
   featured: false,
   newProduct: true,
   inStock: true,
-  sizes: SIZE_OPTIONS.map((volume) => ({
-    volume,
-    price: '',
-    enabled: volume === '100 ml',
-  })),
+  sizes: [emptySize('', '', true)],
 })
 
 function readImportedPhoto(file) {
@@ -47,6 +56,17 @@ function readImportedPhoto(file) {
 }
 
 function productToForm(product, collections = []) {
+  const sizes =
+    Array.isArray(product.sizes) && product.sizes.length > 0
+      ? product.sizes.map((s) =>
+          emptySize(
+            s.volume || '',
+            s.price != null && s.price !== '' ? String(s.price) : '',
+            s.enabled !== false,
+          ),
+        )
+      : [emptySize(product.volume || '', product.price ? String(product.price) : '', true)]
+
   return {
     name: product.name || '',
     image: product.image || '',
@@ -55,14 +75,7 @@ function productToForm(product, collections = []) {
     featured: Boolean(product.featured),
     newProduct: Boolean(product.newProduct),
     inStock: product.inStock !== false,
-    sizes: SIZE_OPTIONS.map((volume) => {
-      const found = product.sizes?.find((s) => s.volume === volume)
-      return {
-        volume,
-        price: found ? String(found.price) : '',
-        enabled: Boolean(found?.enabled),
-      }
-    }),
+    sizes,
   }
 }
 
@@ -107,12 +120,27 @@ export default function AdminProductsPage() {
     setError('')
   }
 
-  const updateSize = (volume, patch) => {
+  const updateSize = (key, patch) => {
     setForm((prev) => ({
       ...prev,
-      sizes: prev.sizes.map((s) =>
-        s.volume === volume ? { ...s, ...patch } : s,
-      ),
+      sizes: prev.sizes.map((s) => (s.key === key ? { ...s, ...patch } : s)),
+    }))
+  }
+
+  const addSize = () => {
+    setForm((prev) => ({
+      ...prev,
+      sizes: [...prev.sizes, emptySize()],
+    }))
+  }
+
+  const removeSize = (key) => {
+    setForm((prev) => ({
+      ...prev,
+      sizes:
+        prev.sizes.length <= 1
+          ? prev.sizes
+          : prev.sizes.filter((s) => s.key !== key),
     }))
   }
 
@@ -139,17 +167,26 @@ export default function AdminProductsPage() {
       setError('Le nom du produit est requis.')
       return
     }
-    const enabledSizes = form.sizes.filter((s) => s.enabled)
+    const preparedSizes = form.sizes.map((s) => ({
+      volume: formatVolume(s.volume),
+      price: Number(s.price) || 0,
+      enabled: Boolean(s.enabled) && Boolean(formatVolume(s.volume)),
+    }))
+    const enabledSizes = preparedSizes.filter((s) => s.enabled)
     if (enabledSizes.length === 0) {
-      setError('Choisissez au moins un format : 50 ml ou 100 ml.')
+      setError('Ajoutez au moins un format (ex. 50 ml, 75 ml, 100 ml).')
       return
     }
     for (const size of enabledSizes) {
-      const price = Number(size.price)
-      if (!price || price <= 0) {
+      if (!size.price || size.price <= 0) {
         setError(`Indiquez un prix valide pour ${size.volume}.`)
         return
       }
+    }
+    const volumes = enabledSizes.map((s) => s.volume)
+    if (new Set(volumes).size !== volumes.length) {
+      setError('Chaque format (ml) doit être unique.')
+      return
     }
 
     const col =
@@ -167,11 +204,7 @@ export default function AdminProductsPage() {
       featured: form.featured,
       newProduct: form.newProduct,
       inStock: form.inStock,
-      sizes: form.sizes.map((s) => ({
-        volume: s.volume,
-        price: Number(s.price) || 0,
-        enabled: Boolean(s.enabled),
-      })),
+      sizes: preparedSizes,
     }
 
     if (editingId != null) {
@@ -196,7 +229,7 @@ export default function AdminProductsPage() {
         <div>
           <h2 className="font-display text-3xl md:text-4xl">Produits</h2>
           <p className="mt-2 text-sm text-ink/65">
-            Gérez le catalogue et les formats 50 ml / 100 ml.
+            Gérez le catalogue et saisissez librement les formats (ml).
           </p>
         </div>
         <Button type="button" onClick={openCreate} className="gap-2">
@@ -331,7 +364,7 @@ export default function AdminProductsPage() {
                   {editingId != null ? 'Modifier le produit' : 'Nouveau produit'}
                 </h3>
                 <p className="mt-1 text-xs text-ink/60">
-                  Activez 50 ml et/ou 100 ml selon le choix.
+                  Saisissez le volume en ml manuellement (ex. 50, 75, 100).
                 </p>
               </div>
               <button
@@ -431,26 +464,38 @@ export default function AdminProductsPage() {
 
               <div>
                 <p className="mb-2 text-[11px] uppercase tracking-[0.14em] text-ink/70">
-                  Formats
+                  Formats (ml)
                 </p>
                 <div className="space-y-3 border border-ink/10 p-3">
                   {form.sizes.map((size) => (
                     <div
-                      key={size.volume}
+                      key={size.key}
                       className="flex flex-wrap items-center gap-3"
                     >
-                      <label className="inline-flex min-w-[90px] items-center gap-2 text-sm">
+                      <label className="inline-flex items-center gap-2 text-sm">
                         <input
                           type="checkbox"
                           checked={size.enabled}
                           onChange={(e) =>
-                            updateSize(size.volume, {
+                            updateSize(size.key, {
                               enabled: e.target.checked,
                             })
                           }
+                          aria-label="Activer ce format"
                         />
-                        {size.volume}
                       </label>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        disabled={!size.enabled}
+                        placeholder="Volume (ex. 75)"
+                        value={size.volume}
+                        onChange={(e) =>
+                          updateSize(size.key, { volume: e.target.value })
+                        }
+                        className="field-input max-w-[140px] disabled:opacity-40"
+                      />
+                      <span className="text-xs text-ink/50">ml</span>
                       <input
                         type="number"
                         min="0"
@@ -459,12 +504,29 @@ export default function AdminProductsPage() {
                         placeholder="Prix €"
                         value={size.price}
                         onChange={(e) =>
-                          updateSize(size.volume, { price: e.target.value })
+                          updateSize(size.key, { price: e.target.value })
                         }
                         className="field-input max-w-[140px] disabled:opacity-40"
                       />
+                      <button
+                        type="button"
+                        onClick={() => removeSize(size.key)}
+                        disabled={form.sizes.length <= 1}
+                        className="inline-flex border border-ink/15 p-2 text-ink/50 transition hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-30"
+                        aria-label="Retirer ce format"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   ))}
+                  <button
+                    type="button"
+                    onClick={addSize}
+                    className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-ink/70 transition hover:text-ink"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Ajouter un format
+                  </button>
                 </div>
               </div>
 
