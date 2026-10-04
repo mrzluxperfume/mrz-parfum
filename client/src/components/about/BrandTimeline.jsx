@@ -49,9 +49,8 @@ export default function BrandTimeline({
           </h1>
         </motion.div>
 
-        {/* Desktop horizontal timeline */}
         <div className="relative mt-16 hidden md:block lg:mt-20">
-          <div className="absolute left-[6%] right-[6%] top-[2.35rem] h-px bg-[#b59a7d]/div>
+          <div className="absolute left-[6%] right-[6%] top-[2.35rem] h-px bg-[#b59a7d]" />
           <ol className="relative grid grid-cols-4 gap-4 lg:gap-8">
             {milestones.map((item, index) => (
               <motion.li
@@ -77,7 +76,6 @@ export default function BrandTimeline({
           </ol>
         </div>
 
-        {/* Mobile vertical timeline */}
         <ol className="relative mx-auto mt-12 max-w-md md:hidden">
           <div className="absolute bottom-2 left-[0.45rem] top-2 w-px bg-[#b59a7d]" />
           {milestones.map((item, index) => (
