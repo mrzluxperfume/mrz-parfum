@@ -23,7 +23,7 @@ const milestones = [
     label: 'Demain',
     title: 'Voir plus grand',
     description:
-      'Développer MRZ à l’échelle nationale puis internationale.',
+      "Développer MRZ à l'échelle nationale puis internationale.",
   },
 ]
 
