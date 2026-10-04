@@ -13,7 +13,8 @@ export const brand = {
   aboutEyebrow: 'À Propos de MRZ',
   aboutTitle: 'À propos de nous',
   collectionLabel: 'Notre collection',
-  historyTitle: 'Notre Histoire',
+  historyTitle: 'Une passion devenue une maison',
+  historyEyebrow: "L'histoire de MRZ",
   philosophyTitle: 'Notre Philosophie',
   history:
     "Née d'une passion pour l'élégance et le raffinement, La Maison MRZ perfume incarne un art intemporel. Chaque création raconte une histoire de beauté, de précision et d'émotion, conçue pour laisser une empreinte indélébile.",
