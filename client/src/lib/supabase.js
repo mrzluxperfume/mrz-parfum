@@ -39,6 +39,18 @@ export function productFromRow(row) {
   }
 }
 
+function fragranceNotesToDb(notes) {
+  if (!notes) return null
+  if (typeof notes === 'string') return notes
+  const payload = {
+    top: notes.top || '',
+    heart: notes.heart || '',
+    base: notes.base || '',
+  }
+  if (!payload.top && !payload.heart && !payload.base) return null
+  return JSON.stringify(payload)
+}
+
 export function productToRow(product) {
   return {
     id: product.id,
@@ -56,7 +68,7 @@ export function productToRow(product) {
     in_stock: product.inStock !== false,
     featured: Boolean(product.featured),
     new_product: Boolean(product.newProduct),
-    fragrance_notes: product.fragranceNotes ?? null,
+    fragrance_notes: fragranceNotesToDb(product.fragranceNotes),
     description: product.description ?? null,
   }
 }

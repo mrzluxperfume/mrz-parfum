@@ -24,6 +24,9 @@ const emptyForm = (collections = []) => ({
   image: '',
   collectionSlug: collections[0]?.slug || '',
   description: '',
+  noteTop: '',
+  noteHeart: '',
+  noteBase: '',
   featured: false,
   newProduct: true,
   inStock: true,
@@ -72,6 +75,9 @@ function productToForm(product, collections = []) {
     image: product.image || '',
     collectionSlug: product.collectionSlug || collections[0]?.slug || '',
     description: product.description || '',
+    noteTop: product.fragranceNotes?.top || '',
+    noteHeart: product.fragranceNotes?.heart || '',
+    noteBase: product.fragranceNotes?.base || '',
     featured: Boolean(product.featured),
     newProduct: Boolean(product.newProduct),
     inStock: product.inStock !== false,
@@ -201,6 +207,11 @@ export default function AdminProductsPage() {
       collection: col?.name || '',
       collectionSlug: col?.slug || '',
       description: form.description.trim() || null,
+      fragranceNotes: {
+        top: form.noteTop.trim(),
+        heart: form.noteHeart.trim(),
+        base: form.noteBase.trim(),
+      },
       featured: form.featured,
       newProduct: form.newProduct,
       inStock: form.inStock,
@@ -452,15 +463,53 @@ export default function AdminProductsPage() {
                   ))}
                 </select>
               </Field>
-              <Field label="Description">
+              <Field label="Description (un paragraphe par ligne)">
                 <textarea
-                  className="field-input min-h-[80px]"
+                  className="field-input min-h-[120px]"
                   value={form.description}
                   onChange={(e) =>
                     setForm((p) => ({ ...p, description: e.target.value }))
                   }
                 />
               </Field>
+
+              <div>
+                <p className="mb-2 text-[11px] uppercase tracking-[0.14em] text-ink/70">
+                  Pyramide olfactive
+                </p>
+                <div className="space-y-3 border border-ink/10 p-3">
+                  <Field label="Note de tête">
+                    <input
+                      className="field-input"
+                      value={form.noteTop}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, noteTop: e.target.value }))
+                      }
+                      placeholder="Ex. Sauge"
+                    />
+                  </Field>
+                  <Field label="Note de cœur">
+                    <input
+                      className="field-input"
+                      value={form.noteHeart}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, noteHeart: e.target.value }))
+                      }
+                      placeholder="Ex. Caramel, Vétiver"
+                    />
+                  </Field>
+                  <Field label="Note de fond">
+                    <input
+                      className="field-input"
+                      value={form.noteBase}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, noteBase: e.target.value }))
+                      }
+                      placeholder="Ex. Cuir"
+                    />
+                  </Field>
+                </div>
+              </div>
 
               <div>
                 <p className="mb-2 text-[11px] uppercase tracking-[0.14em] text-ink/70">

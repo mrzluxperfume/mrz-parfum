@@ -9,11 +9,12 @@ import {
   X,
   ChevronDown,
 } from 'lucide-react'
-import { navigation, brand } from '../../data/brand'
+import { navigation } from '../../data/brand'
 import { useCollections } from '../../context/CollectionsContext'
 import { useCatalog } from '../../context/CatalogContext'
 import { useCart } from '../../context/CartContext'
 import { cn, formatPrice } from '../../utils/format'
+import BrandLogo from './BrandLogo'
 
 const SEARCH_LIMIT = 6
 
@@ -171,13 +172,7 @@ export default function Header() {
             <Menu className="size-6" strokeWidth={1.25} />
           </button>
 
-          <Link
-            to="/"
-            className="font-display text-[22px] font-semibold tracking-[0.2em] text-ink sm:text-[26px]"
-            aria-label={brand.name}
-          >
-            MRZ
-          </Link>
+          <BrandLogo size="sm" />
 
           <div className="flex shrink-0 items-center">
             <button
@@ -257,13 +252,7 @@ export default function Header() {
 
         {/* Desktop header */}
         <div className="hidden items-center gap-4 py-4 lg:flex xl:gap-6">
-          <Link
-            to="/"
-            className="shrink-0 font-display text-[32px] font-semibold tracking-[0.18em] text-ink"
-            aria-label={brand.name}
-          >
-            MRZ
-          </Link>
+          <BrandLogo size="lg" />
 
           <nav className="ml-2 flex min-w-0 flex-1 items-center">
             <ul className="flex items-center gap-3 xl:gap-6 2xl:gap-10">
@@ -436,13 +425,7 @@ export default function Header() {
               className="absolute left-0 top-0 flex h-dvh w-[min(100%,340px)] flex-col bg-white shadow-xl"
             >
               <div className="flex items-center justify-between border-b border-ink/10 px-5 py-4">
-                <Link
-                  to="/"
-                  className="font-display text-2xl tracking-[0.18em]"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  MRZ
-                </Link>
+                <BrandLogo size="md" onClick={() => setMobileOpen(false)} />
                 <button
                   type="button"
                   className="flex size-11 items-center justify-center"

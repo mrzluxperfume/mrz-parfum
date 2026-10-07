@@ -1,10 +1,84 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react'
 import Container from '../components/ui/Container'
 import Button from '../components/ui/Button'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 
 const STORAGE_KEY = 'mrz_testimonials_v1'
+
+const presetTestimonials = [
+  {
+    id: 'preset-1',
+    message: 'Commande reçue super rapidement',
+    rating: 5,
+  },
+  {
+    id: 'preset-2',
+    message:
+      "J’avais un peu peur de commander un parfum sans l’avoir senti mais franchement pas déçue du tout. L’odeur est incroyable !",
+    rating: 5,
+  },
+  {
+    id: 'preset-3',
+    message: 'First order on the website and I’m really satisfied.',
+    rating: 5,
+  },
+  {
+    id: 'preset-4',
+    message:
+      'Le parfum correspond exactement à la description, je suis trop contente de mon achat. Je recommanderai sans hésiter et merci pour les échantillons',
+    rating: 5,
+  },
+  {
+    id: 'preset-5',
+    message: 'Livraison rapide merci',
+    rating: 5,
+  },
+  {
+    id: 'preset-6',
+    message:
+      'J’ai commandé un parfum MRZ Rouge Magnétique pour tester et franchement très belle surprise. L’odeur tient vraiment bien sur moi.',
+    rating: 5,
+  },
+  {
+    id: 'preset-7',
+    message: 'Lamas 520 smells amazing',
+    rating: 5,
+  },
+]
+
+function StarRating({ value = 5 }) {
+  return (
+    <div className="flex items-center gap-0.5" aria-label={`${value} sur 5`}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <Star
+          key={i}
+          className={`size-4 ${
+            i < value ? 'fill-[#b59a7d] text-[#b59a7d]' : 'text-ink/20'
+          }`}
+          strokeWidth={1.25}
+        />
+      ))}
+    </div>
+  )
+}
+
+function TestimonialCard({ message, name, rating = 5 }) {
+  return (
+    <li className="flex aspect-square w-[min(280px,78vw)] shrink-0 snap-start flex-col border border-ink/10 bg-fog p-5 sm:w-[300px] sm:p-6">
+      <StarRating value={rating} />
+      <p className="mt-4 flex-1 overflow-hidden text-sm leading-relaxed text-ink/80">
+        « {message} »
+      </p>
+      {name ? (
+        <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-muted">
+          {name}
+        </p>
+      ) : null}
+    </li>
+  )
+}
 
 function readLocalTestimonials() {
   try {
@@ -20,9 +94,18 @@ export default function TestimonialsPage() {
   const [items, setItems] = useState(() =>
     isSupabaseConfigured ? [] : readLocalTestimonials(),
   )
-  const [form, setForm] = useState({ name: '', message: '' })
+  const [form, setForm] = useState({ name: '', message: '', rating: 5 })
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const scrollerRef = useRef(null)
+
+  const scrollByCard = (direction) => {
+    const el = scrollerRef.current
+    if (!el) return
+    const card = el.querySelector('li')
+    const step = (card?.offsetWidth || 280) + 16
+    el.scrollBy({ left: direction * step, behavior: 'smooth' })
+  }
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return undefined
@@ -44,6 +127,7 @@ export default function TestimonialsPage() {
           id: row.id,
           name: row.name,
           message: row.message,
+          rating: Number(row.rating) || 5,
           createdAt: row.created_at,
         })),
       )
@@ -62,6 +146,7 @@ export default function TestimonialsPage() {
     e.preventDefault()
     const name = form.name.trim()
     const message = form.message.trim()
+    const rating = Number(form.rating) || 5
     if (!name || !message) {
       setError('Merci d’indiquer votre prénom et votre message.')
       return
@@ -71,17 +156,29 @@ export default function TestimonialsPage() {
     setError('')
     try {
       if (isSupabaseConfigured && supabase) {
-        const { data, error: insertError } = await supabase
+        const payload = { name, message }
+        // rating column may not exist yet — try with it, fallback without
+        let { data, error: insertError } = await supabase
           .from('testimonials')
-          .insert({ name, message })
+          .insert({ ...payload, rating })
           .select('*')
           .single()
+        if (insertError) {
+          const retry = await supabase
+            .from('testimonials')
+            .insert(payload)
+            .select('*')
+            .single()
+          data = retry.data
+          insertError = retry.error
+        }
         if (insertError) throw insertError
         setItems((prev) => [
           {
             id: data.id,
             name: data.name,
             message: data.message,
+            rating: Number(data.rating) || rating,
             createdAt: data.created_at,
           },
           ...prev,
@@ -92,6 +189,7 @@ export default function TestimonialsPage() {
             id: Date.now(),
             name,
             message,
+            rating,
             createdAt: new Date().toISOString(),
           },
           ...items,
@@ -99,7 +197,7 @@ export default function TestimonialsPage() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
         setItems(next)
       }
-      setForm({ name: '', message: '' })
+      setForm({ name: '', message: '', rating: 5 })
     } catch (err) {
       setError(err.message || 'Envoi impossible pour le moment.')
     } finally {
@@ -124,29 +222,50 @@ export default function TestimonialsPage() {
       </section>
 
       <section className="py-14 md:py-20">
-        <Container className="max-w-3xl">
-          {items.length === 0 ? (
-            <p className="text-sm leading-relaxed text-ink/70 md:text-base">
-              Aucun témoignage publié pour le moment. Le premier peut être le vôtre.
-            </p>
-          ) : (
-            <ul className="space-y-6">
-              {items.map((item) => (
-                <li key={item.id} className="border border-ink/10 bg-fog px-6 py-6">
-                  <p className="text-sm leading-relaxed text-ink/80 md:text-base">
-                    {item.message}
-                  </p>
-                  <p className="mt-4 text-[11px] uppercase tracking-[0.16em] text-muted">
-                    {item.name}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
+        <div className="relative w-full">
+          <button
+            type="button"
+            onClick={() => scrollByCard(-1)}
+            aria-label="Témoignage précédent"
+            className="absolute left-2 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center border border-ink/15 bg-white/95 text-ink shadow-sm transition hover:border-ink md:left-4"
+          >
+            <ChevronLeft className="size-5" strokeWidth={1.5} />
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollByCard(1)}
+            aria-label="Témoignage suivant"
+            className="absolute right-2 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center border border-ink/15 bg-white/95 text-ink shadow-sm transition hover:border-ink md:right-4"
+          >
+            <ChevronRight className="size-5" strokeWidth={1.5} />
+          </button>
 
+          <ul
+            ref={scrollerRef}
+            className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-12 pb-2 sm:gap-5 sm:px-14 md:px-16 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {presetTestimonials.map((item) => (
+              <TestimonialCard
+                key={item.id}
+                message={item.message}
+                rating={item.rating}
+              />
+            ))}
+            {items.map((item) => (
+              <TestimonialCard
+                key={item.id}
+                message={item.message}
+                name={item.name}
+                rating={item.rating || 5}
+              />
+            ))}
+          </ul>
+        </div>
+
+        <Container className="mt-12 max-w-3xl">
           <motion.form
             onSubmit={submit}
-            className="mt-12 space-y-5 border-t border-ink/10 pt-10"
+            className="space-y-5 border-t border-ink/10 pt-10"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
           >
@@ -163,6 +282,31 @@ export default function TestimonialsPage() {
                 autoComplete="given-name"
               />
             </label>
+            <fieldset>
+              <legend className="mb-2 block text-[11px] uppercase tracking-[0.14em]">
+                Note
+              </legend>
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, rating: n }))}
+                    className="p-0.5 transition hover:opacity-80"
+                    aria-label={`${n} étoile${n > 1 ? 's' : ''}`}
+                  >
+                    <Star
+                      className={`size-6 ${
+                        n <= form.rating
+                          ? 'fill-[#b59a7d] text-[#b59a7d]'
+                          : 'text-ink/25'
+                      }`}
+                      strokeWidth={1.25}
+                    />
+                  </button>
+                ))}
+              </div>
+            </fieldset>
             <label className="block">
               <span className="mb-2 block text-[11px] uppercase tracking-[0.14em]">
                 Message

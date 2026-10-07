@@ -83,9 +83,29 @@ export function normalizeProduct(raw) {
     inStock: raw.inStock !== false,
     featured: Boolean(raw.featured),
     newProduct: Boolean(raw.newProduct),
-    fragranceNotes: raw.fragranceNotes ?? null,
+    fragranceNotes: normalizeFragranceNotes(raw.fragranceNotes),
     description: raw.description ?? null,
   }
+}
+
+export function normalizeFragranceNotes(raw) {
+  if (!raw) return null
+  let value = raw
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return null
+    try {
+      value = JSON.parse(trimmed)
+    } catch {
+      return { top: trimmed, heart: '', base: '' }
+    }
+  }
+  if (typeof value !== 'object') return null
+  const top = String(value.top || value.tete || value.head || '').trim()
+  const heart = String(value.heart || value.coeur || value.middle || '').trim()
+  const base = String(value.base || value.fond || '').trim()
+  if (!top && !heart && !base) return null
+  return { top, heart, base }
 }
 
 export function getEnabledSizes(product) {

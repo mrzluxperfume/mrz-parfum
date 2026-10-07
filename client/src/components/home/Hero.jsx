@@ -3,19 +3,25 @@ import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import Button from '../ui/Button'
 
-const INTERVAL_MS = 6000
+const INTERVAL_MS = 6500
 
 const heroSlides = [
   {
     id: 'slide1-photo1',
     image: '/hero/slide1-photo1.webp',
-    alt: 'MRZ Perfume — L’art du parfum',
-    objectPosition: 'center center',
-    mobileObjectPosition: 'right center',
+    alt: 'MRZ Perfume — fragrances de la maison',
+    // Desktop: flacons à droite, texte à gauche
+    objectPosition: '72% center',
+    tabletObjectPosition: '78% center',
+    // Mobile: cadrage sur les flacons
+    mobileObjectPosition: '85% center',
     theme: 'light',
-    scriptCta: {
-      label: "L'art Du Parfum",
-      to: '/shop',
+    intro: {
+      text: "Chez MRZ Perfume, nous transformons des ingrédients rares en chefs-d'œuvre. Chaque fragrance est élaborée avec minutie pour évoquer l'élégance, l'émotion et un raffinement intemporel. Notre passion pour la parfumerie se reflète dans chaque flacon, offrant une expérience unique.",
+      cta: {
+        label: 'Découvrir la collection',
+        to: '/shop',
+      },
     },
   },
   {
@@ -23,7 +29,8 @@ const heroSlides = [
     image: '/hero/slide1-photo2.webp',
     alt: 'MRZ Perfume — Le Désir',
     objectPosition: 'left center',
-    mobileObjectPosition: 'left center',
+    tabletObjectPosition: '18% center',
+    mobileObjectPosition: '18% center',
     theme: 'dark',
     panel: {
       title: 'SAUGE',
@@ -39,14 +46,25 @@ const heroSlides = [
 
 export default function Hero() {
   const [index, setIndex] = useState(0)
-  const [isMobile, setIsMobile] = useState(false)
+  const [viewport, setViewport] = useState('desktop')
 
   useEffect(() => {
-    const media = window.matchMedia('(max-width: 767px)')
-    const apply = () => setIsMobile(media.matches)
+    const mobileMq = window.matchMedia('(max-width: 767px)')
+    const tabletMq = window.matchMedia(
+      '(min-width: 768px) and (max-width: 1023px)',
+    )
+    const apply = () => {
+      if (mobileMq.matches) setViewport('mobile')
+      else if (tabletMq.matches) setViewport('tablet')
+      else setViewport('desktop')
+    }
     apply()
-    media.addEventListener('change', apply)
-    return () => media.removeEventListener('change', apply)
+    mobileMq.addEventListener('change', apply)
+    tabletMq.addEventListener('change', apply)
+    return () => {
+      mobileMq.removeEventListener('change', apply)
+      tabletMq.removeEventListener('change', apply)
+    }
   }, [])
 
   useEffect(() => {
@@ -59,84 +77,147 @@ export default function Hero() {
 
   const active = heroSlides[index]
   const lightTheme = active.theme === 'light'
-  const lightMobile = isMobile && lightTheme
+  const isPanelSlide = Boolean(active.panel)
+  const isIntroSlide = Boolean(active.intro)
+  const stacked = viewport !== 'desktop'
+
+  const objectPosition =
+    viewport === 'mobile'
+      ? active.mobileObjectPosition || active.objectPosition
+      : viewport === 'tablet'
+        ? active.tabletObjectPosition || active.objectPosition
+        : active.objectPosition || 'center center'
 
   return (
-    <section className="relative isolate min-h-[70vh] overflow-hidden bg-ink text-white md:min-h-[82vh]">
+    <section
+      className={`relative isolate overflow-hidden ${
+        lightTheme ? 'bg-[#f3ece4] text-ink' : 'bg-ink text-white'
+      } ${
+        stacked
+          ? 'min-h-[min(92vh,820px)]'
+          : 'min-h-[70vh] md:min-h-[82vh]'
+      }`}
+    >
       <div className="absolute inset-0">
         <AnimatePresence mode="sync">
           <motion.img
             key={active.id}
             src={active.image}
             alt={active.alt}
-            initial={{ opacity: 0, scale: 1.04 }}
-            animate={{
-              opacity: lightMobile || active.id === 'slide1-photo2' ? 1 : 0.85,
-              scale: 1,
-            }}
+            initial={{ opacity: 0, scale: 1.03 }}
+            animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{
-              objectPosition:
-                (isMobile && active.mobileObjectPosition) ||
-                active.objectPosition ||
-                'center center',
-            }}
+            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+            className={
+              stacked
+                ? isPanelSlide
+                  ? 'absolute inset-x-0 top-0 h-[52%] w-full object-cover sm:h-[54%]'
+                  : 'absolute inset-x-0 top-0 h-[48%] w-full object-cover sm:h-[52%] md:h-[56%]'
+                : 'absolute inset-0 h-full w-full object-cover'
+            }
+            style={{ objectPosition }}
           />
         </AnimatePresence>
 
-        {active.id === 'slide1-photo1' ? (
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(243,236,228,0)_0%,rgba(243,236,228,0)_72%,rgba(243,236,228,0.55)_100%)] md:bg-none" />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent md:bg-none" />
+        {/* Zones sous l’image (mobile / tablette) */}
+        {stacked && isIntroSlide && (
+          <div className="absolute inset-x-0 bottom-0 top-[48%] bg-[#f3ece4] sm:top-[52%] md:top-[56%]" />
+        )}
+        {stacked && isPanelSlide && (
+          <div className="absolute inset-x-0 bottom-0 top-[52%] bg-ink sm:top-[54%]" />
+        )}
+
+        {/* Lisibilité desktop */}
+        {!stacked && isIntroSlide && (
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#f3ece4]/85 via-[#f3ece4]/35 to-transparent lg:from-[#f3ece4]/55 lg:via-transparent" />
+        )}
+        {!stacked && isPanelSlide && (
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-black/25 via-transparent to-transparent" />
         )}
       </div>
 
-      <div className="container-mrz relative flex min-h-[70vh] flex-col pb-12 pt-24 md:min-h-[82vh] md:pb-24 md:pt-32">
+      <div
+        className={`container-mrz relative flex flex-col ${
+          stacked
+            ? 'min-h-[min(92vh,820px)] pb-8 pt-20'
+            : 'min-h-[70vh] pb-12 pt-24 md:min-h-[82vh] md:pb-24 md:pt-32'
+        }`}
+      >
         {active.panel ? (
-          <div className="flex flex-1 flex-col justify-end md:absolute md:inset-y-0 md:right-[4%] md:flex md:w-[min(340px,28%)] md:justify-center md:pb-0">
+          <div
+            className={
+              stacked
+                ? 'flex flex-1 flex-col justify-end pt-[50%] sm:pt-[52%]'
+                : 'absolute inset-y-0 right-[3%] flex w-[min(360px,32%)] items-center justify-center lg:right-[4%] lg:w-[min(380px,30%)]'
+            }
+          >
             <motion.div
               key={`${active.id}-panel`}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, delay: 0.15 }}
-              className="max-w-md text-left md:max-w-none md:text-center"
+              transition={{ duration: 0.55, delay: 0.12 }}
+              className={`w-full px-1 text-center ${
+                stacked ? 'mx-auto max-w-md pb-2' : ''
+              }`}
             >
-              <p className="font-display text-4xl tracking-[0.18em] text-white md:text-5xl">
+              <p className="font-display text-[2rem] tracking-[0.18em] text-white sm:text-4xl lg:text-5xl">
                 {active.panel.title}
               </p>
-              <p className="mt-5 text-sm leading-relaxed text-white/85 md:text-[15px]">
+              <p className="mt-3 text-sm leading-relaxed text-white/85 sm:mt-5 sm:text-[15px]">
                 « {active.panel.description} »
               </p>
-              <div className="mt-8 flex md:justify-center">
+              <div className="mt-5 flex justify-center sm:mt-8">
                 <Button as={Link} to={active.panel.cta.to} variant="secondary">
                   {active.panel.cta.label}
                 </Button>
               </div>
             </motion.div>
           </div>
-        ) : active.scriptCta ? (
-          <div className="flex flex-1 flex-col items-center justify-center text-center">
+        ) : active.intro ? (
+          <div
+            className={
+              stacked
+                ? 'flex flex-1 flex-col justify-end pt-[46%] sm:pt-[50%] md:pt-[54%]'
+                : 'flex flex-1 flex-col justify-center'
+            }
+          >
             <motion.div
-              key={`${active.id}-script`}
-              initial={{ opacity: 0, y: 12 }}
+              key={`${active.id}-intro`}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.12 }}
+              transition={{ duration: 0.55, delay: 0.12 }}
+              className={`text-left ${
+                stacked
+                  ? 'mx-auto w-full max-w-lg'
+                  : 'max-w-[min(440px,42%)] lg:max-w-[480px]'
+              }`}
             >
-              <Link
-                to={active.scriptCta.to}
-                className="font-script text-[clamp(2.75rem,7vw,5.5rem)] leading-none text-ink transition-opacity duration-300 hover:opacity-70"
-              >
-                {active.scriptCta.label}
-              </Link>
+              <p className="text-[13px] leading-relaxed text-ink sm:text-sm md:text-[15px] lg:text-base lg:leading-[1.7]">
+                {active.intro.text}
+              </p>
+              <div className={`mt-5 sm:mt-7 ${stacked ? 'flex justify-center sm:justify-start' : ''}`}>
+                <Button
+                  as={Link}
+                  to={active.intro.cta.to}
+                  variant="secondary"
+                  style={{
+                    backgroundColor: '#151515',
+                    color: '#ffffff',
+                    borderColor: '#151515',
+                  }}
+                >
+                  {active.intro.cta.label}
+                </Button>
+              </div>
             </motion.div>
           </div>
         ) : null}
 
         <div
-          className={`mt-auto flex items-center gap-2 pt-8 ${
-            lightMobile || lightTheme ? 'justify-center' : 'justify-start'
+          className={`mt-auto flex items-center gap-2 pt-5 sm:pt-6 ${
+            lightTheme || isPanelSlide || stacked
+              ? 'justify-center'
+              : 'justify-start'
           }`}
         >
           {heroSlides.map((slide, i) => (

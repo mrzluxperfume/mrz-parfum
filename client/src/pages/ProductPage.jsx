@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Container from '../components/ui/Container'
 import Button from '../components/ui/Button'
+import ProductEditorial from '../components/product/ProductEditorial'
 import { useCart } from '../context/CartContext'
 import { useCatalog } from '../context/CatalogContext'
 import { formatPrice } from '../utils/format'
@@ -55,8 +56,8 @@ export default function ProductPage() {
           ← Trouver mon parfum
         </Link>
 
-        <div className="mt-8 grid gap-10 md:grid-cols-2 md:items-start md:gap-14">
-          <div className="overflow-hidden bg-fog">
+        <div className="mt-8 grid gap-10 md:grid-cols-2 md:items-start md:gap-12 lg:gap-16">
+          <div className="overflow-hidden bg-fog md:sticky md:top-28">
             {product.image ? (
               <img
                 src={product.image}
@@ -69,23 +70,14 @@ export default function ProductPage() {
           </div>
 
           <div>
-            {product.collection && (
-              <Link
-                to={`/collection/${product.collectionSlug}`}
-                className="text-[11px] uppercase tracking-[0.16em] text-ink/55"
-              >
-                {product.collection}
-              </Link>
-            )}
-            <h1 className="mt-3 font-title text-4xl font-medium uppercase leading-none tracking-tight md:text-5xl">
+            <h1 className="font-title text-4xl font-medium uppercase leading-none tracking-tight md:text-5xl">
               {product.name}
             </h1>
-            <p className="mt-6 font-display text-3xl tabular-nums">
+
+            <ProductEditorial product={product} />
+
+            <p className="mt-10 font-display text-3xl tabular-nums">
               {formatPrice(activePrice)}
-            </p>
-            <p className="mt-5 max-w-md text-sm leading-relaxed text-ink/70">
-              {product.description ||
-                `${product.collection || 'MRZ'} — ${product.volume || 'format au choix'}.`}
             </p>
 
             {sizes.length > 0 && (

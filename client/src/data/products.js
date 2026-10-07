@@ -14,8 +14,12 @@ export const products = [
     "inStock": true,
     "featured": true,
     "newProduct": true,
-    "fragranceNotes": null,
-    "description": null
+    "fragranceNotes": {
+      "top": "Sauge",
+      "heart": "Caramel, Vétiver",
+      "base": "Cuir"
+    },
+    "description": "Le Désir HOMME est une fragrance masculine d’une présence douce et affirmée, pensée pour ceux qui aiment laisser une empreinte sans jamais forcer le trait.\n\nDès les premières notes, la sauge ouvre la composition avec fraîcheur et caractère. Puis viennent le caramel et le vétiver, qui apportent une chaleur enveloppante et une élégance moderne.\n\nEn fond, le cuir révèle une sensualité maîtrisée, profonde et durable. Une signature olfactive raffinée, intense et mémorable.\n\nLe Désir HOMME ne se porte pas : il se vit !"
   },
   {
     "id": 2,

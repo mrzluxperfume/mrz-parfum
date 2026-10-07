@@ -2,24 +2,17 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Container from '../components/ui/Container'
 import Button from '../components/ui/Button'
-import { brand } from '../data/brand'
-import { useCollections } from '../context/CollectionsContext'
-import { useCatalog } from '../context/CatalogContext'
+
+const heroImage = '/about/IMG_0811.webp'
 
 export default function AboutPage() {
-  const { getProductBySlug } = useCatalog()
-  const { collections } = useCollections()
-  const heroImage =
-    getProductBySlug('le-desir')?.image || collections[0]?.image
-
   return (
     <div>
-      {/* Hero */}
       <section className="relative isolate min-h-[52vh] overflow-hidden bg-ink text-white md:min-h-[60vh]">
         <img
           src={heroImage}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover opacity-45"
+          alt="Boutique MRZ Perfume"
+          className="absolute inset-0 h-full w-full object-cover opacity-55"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-ink/25" />
         <Container className="relative flex min-h-[52vh] flex-col justify-end pb-14 pt-28 md:min-h-[60vh] md:pb-20">
@@ -29,19 +22,55 @@ export default function AboutPage() {
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
             <p className="mb-3 text-[11px] uppercase tracking-[0.22em] text-white/70">
-              {brand.aboutEyebrow}
+              Qui sommes-nous
             </p>
-            <h1 className="font-display text-5xl font-medium tracking-tight md:text-6xl lg:text-7xl">
-              {brand.aboutTitle}
+            <h1 className="font-display text-4xl font-medium tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+              Bienvenue dans l’univers MRZ
             </h1>
           </motion.div>
         </Container>
       </section>
 
-      {/* Intro */}
       <section className="py-16 md:py-24">
         <Container>
-          <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="mx-auto max-w-3xl space-y-6 text-sm leading-relaxed text-ink/80 md:text-base md:leading-[1.75]">
+            <motion.p
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              MRZ est une boutique dédiée à l’univers du parfum, où l’élégance,
+              la découverte et la personnalité se rencontrent.
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.05 }}
+            >
+              Nous proposons une sélection de fragrances pour femmes, hommes et
+              mixtes, allant des parfums de niche aux parfums de Dubaï, en
+              passant par les brumes, les muscs et les parfums d’intérieur.
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              Notre particularité ? Vous faire découvrir des références que
+              vous ne retrouverez pas forcément dans les autres boutiques de
+              parfumerie à Lyon, tout en vous proposant notre propre univers à
+              travers la collection de parfums MRZ.
+            </motion.p>
+          </div>
+        </Container>
+      </section>
+
+      <section className="bg-fog py-16 md:py-24">
+        <Container>
+          <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
             <motion.div
               className="lg:col-span-5"
               initial={{ opacity: 0, y: 16 }}
@@ -50,13 +79,12 @@ export default function AboutPage() {
               transition={{ duration: 0.5 }}
             >
               <p className="text-[11px] uppercase tracking-[0.2em] text-muted">
-                {brand.aboutEyebrow}
+                Notre approche
               </p>
-              <h2 className="mt-4 font-display text-4xl leading-tight md:text-5xl">
-                {brand.aboutHeadline}
+              <h2 className="mt-4 font-display text-3xl leading-tight md:text-4xl lg:text-5xl">
+                Une parfumerie pensée pour chaque personnalité
               </h2>
             </motion.div>
-
             <motion.div
               className="space-y-6 text-sm leading-relaxed text-ink/80 md:text-base lg:col-span-7"
               initial={{ opacity: 0, y: 16 }}
@@ -64,19 +92,69 @@ export default function AboutPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.08 }}
             >
-              <p>{brand.aboutIntro}</p>
-              <p>{brand.aboutExperience}</p>
-              <div className="pt-2">
-                <Button as={Link} to="/shop" variant="outline">
-                  {brand.collectionLabel}
-                </Button>
-              </div>
+              <p>
+                Chez MRZ, nous pensons que le parfum ne se résume pas à une
+                simple fragrance. Il accompagne une personnalité, une humeur, un
+                souvenir et une façon de se distinguer.
+              </p>
+              <p>
+                C’est pourquoi nous avons imaginé un univers où chacun peut
+                prendre le temps de découvrir, sentir et trouver la fragrance
+                qui lui correspond véritablement.
+              </p>
+              <p>
+                Que vous recherchiez une signature élégante, une fragrance
+                intense, une senteur délicate ou simplement l’envie de découvrir
+                quelque chose de nouveau, notre sélection vous invite à explorer
+                différents univers olfactifs.
+              </p>
             </motion.div>
           </div>
         </Container>
       </section>
 
-      {/* Philosophie */}
+      <section className="py-16 md:py-24">
+        <Container>
+          <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
+            <motion.div
+              className="lg:col-span-5"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <p className="text-[11px] uppercase tracking-[0.2em] text-muted">
+                Accueil & conseil
+              </p>
+              <h2 className="mt-4 font-display text-3xl leading-tight md:text-4xl lg:text-5xl">
+                Une expérience avant tout
+              </h2>
+            </motion.div>
+            <motion.div
+              className="space-y-6 text-sm leading-relaxed text-ink/80 md:text-base lg:col-span-7"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.08 }}
+            >
+              <p>
+                Nous accordons une importance particulière à l’accueil et au
+                conseil.
+              </p>
+              <p>
+                Chez MRZ, chaque client doit se sentir écouté, compris et
+                accompagné.
+              </p>
+              <p>
+                Nous souhaitons créer une expérience à la fois chaleureuse,
+                moderne et raffinée, dans laquelle la découverte du parfum
+                devient un véritable moment pour soi.
+              </p>
+            </motion.div>
+          </div>
+        </Container>
+      </section>
+
       <section className="bg-ink py-20 text-white md:py-28">
         <Container>
           <motion.div
@@ -87,46 +165,25 @@ export default function AboutPage() {
             transition={{ duration: 0.55 }}
           >
             <p className="text-[11px] uppercase tracking-[0.22em] text-white/55">
-              {brand.philosophyTitle}
+              Notre univers
             </p>
-            <blockquote className="mt-8 space-y-4 font-display text-3xl leading-snug md:text-4xl lg:text-5xl">
-              {brand.philosophy.lines.map((line) => (
-                <p key={line}>{line}</p>
-              ))}
-            </blockquote>
-            <p className="mt-10 text-[11px] uppercase tracking-[0.22em] text-white/55">
-              — {brand.philosophy.attribution}
+            <p className="mt-8 font-display text-2xl leading-snug md:text-3xl lg:text-4xl">
+              Élégant. Moderne. Chaleureux. Premium.
             </p>
-          </motion.div>
-        </Container>
-      </section>
-
-      {/* Maisons / CTA */}
-      <section className="pt-16 pb-0 md:pt-20">
-        <Container>
-          <div className="flex flex-col items-start justify-between gap-8 border border-ink/10 border-b-0 bg-fog p-8 md:flex-row md:items-center md:p-12">
-            <div>
-              <h2 className="font-title text-2xl font-medium uppercase tracking-tight md:text-3xl">
-                {brand.collectionLabel}
-              </h2>
-              <p className="mt-3 max-w-lg text-sm text-ink/70">
-                Découvrez les univers Maison MRZ, Lamas, Osma et Dubai.
-              </p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                {brand.houses.map((house) => (
-                  <span
-                    key={house}
-                    className="border border-ink/15 px-3 py-1 text-[10px] uppercase tracking-[0.14em] text-ink/75"
-                  >
-                    {house}
-                  </span>
-                ))}
-              </div>
+            <p className="mx-auto mt-10 max-w-2xl text-sm leading-relaxed text-white/75 md:text-base">
+              MRZ, c’est la rencontre entre une sélection singulière de
+              fragrances et une vision contemporaine de la parfumerie.
+            </p>
+            <p className="mt-6 font-display text-xl leading-snug md:text-2xl">
+              Découvrez notre univers. Trouvez votre signature. Laissez votre
+              empreinte.
+            </p>
+            <div className="mt-10">
+              <Button as={Link} to="/shop" variant="secondary">
+                Découvrir la boutique
+              </Button>
             </div>
-            <Button as={Link} to="/shop">
-              Découvrir la boutique
-            </Button>
-          </div>
+          </motion.div>
         </Container>
       </section>
     </div>

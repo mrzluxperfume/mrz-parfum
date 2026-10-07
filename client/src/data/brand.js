@@ -13,8 +13,8 @@ export const brand = {
   aboutEyebrow: 'À Propos de MRZ',
   aboutTitle: 'À propos de nous',
   collectionLabel: 'Notre collection',
-  historyTitle: 'Une passion devenue une maison',
-  historyEyebrow: "L'histoire de MRZ",
+  historyTitle: 'D’une passion pour la fragrance à la naissance de MRZ',
+  historyEyebrow: 'Notre histoire',
   philosophyTitle: 'Notre Philosophie',
   history:
     "Née d'une passion pour l'élégance et le raffinement, La Maison MRZ perfume incarne un art intemporel. Chaque création raconte une histoire de beauté, de précision et d'émotion, conçue pour laisser une empreinte indélébile.",
@@ -68,30 +68,34 @@ export const perfumeMegaLinks = [
   { label: 'Room Diffuseur', href: '/category/room-diffuseur' },
 ]
 
-/** Soft service messaging only — no invented shipping/return thresholds. */
 export const topBarMessages = [
-  "L'essence du luxe",
-  'Maison de parfumerie MRZ',
-  'Conseil & accompagnement',
+  'Une brume : achetez la 2ème à -50%',
+  'Paiement sécurisé',
+  'La Poste 48h en métropolitaine · Livraison offerte dès 100€ d’achat',
+  'Une surprise glissée dans chaque commande',
+  'Satisfaction client au cœur de notre priorité',
 ]
 
 export const trustItems = [
   {
-    title: 'Conseil raffiné',
-    description:
-      "Une écoute attentive et l'art du conseil pour guider chaque découverte olfactive.",
-    icon: 'sparkles',
-  },
-  {
-    title: 'Expérience immersive',
-    description:
-      'Une atmosphère intime et raffinée, pensée pour amateur comme connaisseur.',
-    icon: 'heart',
-  },
-  {
-    title: 'Art du parfum',
-    description:
-      "Des ingrédients rares transformés en fragrances d'élégance et d'émotion.",
+    title: 'Paiement sécurisé',
+    description: 'Réglez en toute confiance, transactions protégées.',
     icon: 'shield',
+  },
+  {
+    title: 'Livraison rapide',
+    description:
+      'La Poste 48h en métropolitaine. Livraison offerte dès 100€ d’achat.',
+    icon: 'truck',
+  },
+  {
+    title: 'Une surprise',
+    description: 'Une attention glissée dans chaque commande.',
+    icon: 'gift',
+  },
+  {
+    title: 'Satisfaction client',
+    description: 'Au cœur de notre priorité, à chaque étape.',
+    icon: 'heart',
   },
 ]
