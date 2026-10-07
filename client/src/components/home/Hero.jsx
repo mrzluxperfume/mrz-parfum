@@ -148,7 +148,7 @@ export default function Hero() {
             className={
               stacked
                 ? 'flex flex-1 flex-col justify-end pt-[50%] sm:pt-[52%]'
-                : 'absolute inset-y-0 right-[3%] flex w-[min(360px,32%)] items-center justify-center lg:right-[4%] lg:w-[min(380px,30%)]'
+                : 'absolute inset-y-0 right-[2%] flex w-[min(460px,36%)] items-center justify-center lg:right-[3%] lg:w-[min(520px,38%)] xl:w-[min(560px,36%)]'
             }
           >
             <motion.div
@@ -156,18 +156,23 @@ export default function Hero() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, delay: 0.12 }}
-              className={`w-full px-1 text-center ${
-                stacked ? 'mx-auto max-w-md pb-2' : ''
+              className={`w-full px-2 text-center ${
+                stacked ? 'mx-auto max-w-md pb-2 sm:max-w-lg' : 'px-3 lg:px-5'
               }`}
             >
-              <p className="font-display text-[2rem] tracking-[0.18em] text-white sm:text-4xl lg:text-5xl">
+              <p className="font-display text-[clamp(2rem,4.5vw,4.25rem)] tracking-[0.18em] text-white">
                 {active.panel.title}
               </p>
-              <p className="mt-3 text-sm leading-relaxed text-white/85 sm:mt-5 sm:text-[15px]">
+              <p className="mt-3 text-[clamp(0.9rem,1.35vw,1.2rem)] leading-relaxed text-white/90 sm:mt-5 lg:mt-6 lg:leading-[1.65]">
                 « {active.panel.description} »
               </p>
-              <div className="mt-5 flex justify-center sm:mt-8">
-                <Button as={Link} to={active.panel.cta.to} variant="secondary">
+              <div className="mt-5 flex justify-center sm:mt-7 lg:mt-9">
+                <Button
+                  as={Link}
+                  to={active.panel.cta.to}
+                  variant="secondary"
+                  className="px-7 py-3.5 text-[11px] sm:px-8 sm:text-[12px]"
+                >
                   {active.panel.cta.label}
                 </Button>
               </div>
@@ -189,10 +194,10 @@ export default function Hero() {
               className={`text-left ${
                 stacked
                   ? 'mx-auto w-full max-w-lg'
-                  : 'max-w-[min(440px,42%)] lg:max-w-[480px]'
+                  : 'max-w-[min(520px,44%)] lg:max-w-[560px]'
               }`}
             >
-              <p className="text-[13px] leading-relaxed text-ink sm:text-sm md:text-[15px] lg:text-base lg:leading-[1.7]">
+              <p className="text-[clamp(0.85rem,1.2vw,1.125rem)] leading-relaxed text-ink lg:leading-[1.75]">
                 {active.intro.text}
               </p>
               <div className={`mt-5 sm:mt-7 ${stacked ? 'flex justify-center sm:justify-start' : ''}`}>
@@ -200,6 +205,7 @@ export default function Hero() {
                   as={Link}
                   to={active.intro.cta.to}
                   variant="secondary"
+                  className="px-7 py-3.5 text-[11px] sm:text-[12px]"
                   style={{
                     backgroundColor: '#151515',
                     color: '#ffffff',
