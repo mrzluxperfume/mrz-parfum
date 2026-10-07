@@ -17,6 +17,7 @@ const heroSlides = [
     mobileObjectPosition: '85% center',
     theme: 'light',
     intro: {
+      title: "L'art du parfum",
       text: "Chez MRZ Perfume, nous transformons des ingrédients rares en chefs-d'œuvre. Chaque fragrance est élaborée avec minutie pour évoquer l'élégance, l'émotion et un raffinement intemporel. Notre passion pour la parfumerie se reflète dans chaque flacon, offrant une expérience unique.",
       cta: {
         label: 'Découvrir la collection',
@@ -182,8 +183,8 @@ export default function Hero() {
           <div
             className={
               stacked
-                ? 'flex flex-1 flex-col justify-end pt-[46%] sm:pt-[50%] md:pt-[54%]'
-                : 'flex flex-1 flex-col justify-center'
+                ? 'flex flex-1 flex-col justify-end pt-[50%] sm:pt-[54%] md:pt-[58%]'
+                : 'flex flex-1 flex-col justify-end pb-6 lg:pb-8 xl:pb-10'
             }
           >
             <motion.div
@@ -197,7 +198,16 @@ export default function Hero() {
                   : 'max-w-[min(520px,44%)] lg:max-w-[560px]'
               }`}
             >
-              <p className="text-[clamp(0.85rem,1.2vw,1.125rem)] leading-relaxed text-ink lg:leading-[1.75]">
+              {active.intro.title && (
+                <p className="font-display text-[clamp(2rem,4.5vw,4.25rem)] tracking-[0.18em] text-ink">
+                  {active.intro.title}
+                </p>
+              )}
+              <p
+                className={`text-[clamp(0.85rem,1.2vw,1.125rem)] leading-relaxed text-ink lg:leading-[1.75] ${
+                  active.intro.title ? 'mt-4 sm:mt-5 lg:mt-6' : ''
+                }`}
+              >
                 {active.intro.text}
               </p>
               <div className={`mt-5 sm:mt-7 ${stacked ? 'flex justify-center sm:justify-start' : ''}`}>
