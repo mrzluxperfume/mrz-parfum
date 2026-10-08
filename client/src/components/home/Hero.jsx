@@ -141,7 +141,7 @@ export default function Hero() {
         className={`container-mrz relative flex flex-col ${
           stacked
             ? 'min-h-[min(92vh,820px)] pb-8 pt-20'
-            : 'min-h-[70vh] pb-12 pt-24 md:min-h-[82vh] md:pb-24 md:pt-32'
+            : 'min-h-[70vh] pb-12 pt-24 md:min-h-[calc(82vh+10rem)] md:pb-24 md:pt-32'
         }`}
       >
         {active.panel ? (
@@ -187,6 +187,17 @@ export default function Hero() {
                 : 'flex flex-1 flex-col justify-end pb-6 lg:pb-8 xl:pb-10'
             }
           >
+            {active.intro.title && (
+              <p
+                className={`w-full text-center whitespace-nowrap font-display leading-none tracking-[0.18em] text-ink ${
+                  stacked
+                    ? 'text-[clamp(1.45rem,6.6vw,2.5rem)]'
+                    : 'text-[clamp(2rem,4.2vw,4.25rem)]'
+                }`}
+              >
+                {active.intro.title}
+              </p>
+            )}
             <motion.div
               key={`${active.id}-intro`}
               initial={{ opacity: 0, y: 16 }}
@@ -198,14 +209,9 @@ export default function Hero() {
                   : 'max-w-[min(520px,44%)] lg:max-w-[560px]'
               }`}
             >
-              {active.intro.title && (
-                <p className="font-display text-[clamp(2rem,4.5vw,4.25rem)] tracking-[0.18em] text-ink">
-                  {active.intro.title}
-                </p>
-              )}
               <p
-                className={`text-[clamp(0.85rem,1.2vw,1.125rem)] leading-relaxed text-ink lg:leading-[1.75] ${
-                  active.intro.title ? 'mt-4 sm:mt-5 lg:mt-6' : ''
+                className={`max-w-[min(520px,100%)] text-[clamp(0.85rem,1.2vw,1.125rem)] leading-relaxed text-ink lg:max-w-[560px] lg:leading-[1.75] ${
+                  active.intro.title ? 'mt-4 sm:mt-5 lg:mt-[11.5rem]' : ''
                 }`}
               >
                 {active.intro.text}

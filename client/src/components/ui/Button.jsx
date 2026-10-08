@@ -2,7 +2,7 @@ import { cn } from '../../utils/format'
 
 const variants = {
   primary:
-    'bg-forest text-white hover:bg-forest-hover border border-transparent',
+    'bg-ink text-white hover:bg-black border border-transparent',
   secondary:
     'bg-white text-ink border border-white hover:bg-transparent hover:text-white',
   outline:
