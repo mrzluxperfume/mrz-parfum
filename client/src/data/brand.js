@@ -60,12 +60,12 @@ export const navigation = [
 ]
 
 export const perfumeMegaLinks = [
-  { label: 'Maison MRZ', href: '/category/maison-mrz' },
   { label: 'Lamas', href: '/category/lamas' },
-  { label: 'Parfum Osma', href: '/category/parfum-osma' },
+  { label: 'Maison MRZ', href: '/category/maison-mrz' },
   { label: 'Collection Dubai', href: '/category/collection-dubai' },
   { label: 'Body Splash', href: '/category/body-splash' },
-  { label: 'Room Diffuseur', href: '/category/room-diffuseur' },
+  { label: "Parfum d'intérieur", href: '/category/room-diffuseur' },
+  { label: 'Parfum Osma', href: '/category/parfum-osma' },
 ]
 
 export const topBarMessages = [

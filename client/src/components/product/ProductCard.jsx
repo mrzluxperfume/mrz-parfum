@@ -5,6 +5,7 @@ import Button from '../ui/Button'
 import { useCart } from '../../context/CartContext'
 import { formatPrice } from '../../utils/format'
 import { getEnabledSizes } from '../../utils/productModel'
+import { collectionDisplayName } from '../../data/collections'
 
 export default function ProductCard({ product }) {
   const { addItem } = useCart()
@@ -43,7 +44,7 @@ export default function ProductCard({ product }) {
         </div>
         {product.category && (
           <span className="pointer-events-none absolute bottom-3 right-4 text-[12px] font-light text-ink/80">
-            {product.category}
+            {collectionDisplayName(product.categorySlug, product.category)}
           </span>
         )}
       </Link>
@@ -54,7 +55,7 @@ export default function ProductCard({ product }) {
             to={`/category/${product.categorySlug}`}
             className="text-[12px] text-ink underline decoration-ink/30 underline-offset-2 transition hover:decoration-ink"
           >
-            {product.brand}
+            {collectionDisplayName(product.categorySlug, product.brand)}
           </Link>
           <Link
             to={`/product/${product.slug}`}

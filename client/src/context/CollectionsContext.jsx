@@ -6,7 +6,11 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { collections as seedCollections } from '../data/collections'
+import {
+  collectionDisplayName,
+  collections as seedCollections,
+  sortCollections,
+} from '../data/collections'
 import { slugify } from '../utils/productModel'
 import {
   collectionFromRow,
@@ -24,7 +28,7 @@ function normalizeCollection(raw) {
   return {
     id: String(raw?.id || slug),
     slug,
-    name,
+    name: collectionDisplayName(slug, name),
     description: String(raw?.description || '').trim(),
     image: raw?.image || '',
     tone: raw?.tone || 'dark',
@@ -37,15 +41,17 @@ function loadLocalCollections() {
     if (raw) {
       const parsed = JSON.parse(raw)
       if (Array.isArray(parsed)) {
-        return parsed
+        return sortCollections(
+        parsed
           .map(normalizeCollection)
-          .filter((c) => c.name && c.slug && c.slug !== 'parfum-rp-paris')
+          .filter((c) => c.name && c.slug && c.slug !== 'parfum-rp-paris'),
+      )
       }
     }
   } catch {
     /* ignore */
   }
-  return seedCollections.map(normalizeCollection)
+  return sortCollections(seedCollections.map(normalizeCollection))
 }
 
 function persistLocal(list) {
@@ -73,9 +79,11 @@ export function CollectionsProvider({ children }) {
         return
       }
       setCollections(
-        (data || [])
-          .map((row) => normalizeCollection(collectionFromRow(row)))
-          .filter((c) => c.slug !== 'parfum-rp-paris'),
+        sortCollections(
+          (data || [])
+            .map((row) => normalizeCollection(collectionFromRow(row)))
+            .filter((c) => c.slug !== 'parfum-rp-paris'),
+        ),
       )
     })()
 
@@ -86,7 +94,9 @@ export function CollectionsProvider({ children }) {
 
   const commit = useCallback((updater) => {
     setCollections((prev) => {
-      const next = typeof updater === 'function' ? updater(prev) : updater
+      const next = sortCollections(
+        typeof updater === 'function' ? updater(prev) : updater,
+      )
       if (!isSupabaseConfigured) persistLocal(next)
       return next
     })

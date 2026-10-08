@@ -71,7 +71,10 @@ export default function ProductEditorial({ product }) {
             to={`/collection/${product.collectionSlug || product.categorySlug}`}
             className="font-semibold text-ink transition hover:opacity-70"
           >
-            {product.collection || product.category}
+            {product.collectionSlug === 'room-diffuseur' ||
+            product.categorySlug === 'room-diffuseur'
+              ? "Parfum d'intérieur"
+              : product.collection || product.category}
           </Link>
         </p>
       )}

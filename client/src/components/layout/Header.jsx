@@ -10,6 +10,7 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { navigation } from '../../data/brand'
+import { collectionDisplayName } from '../../data/collections'
 import { useCollections } from '../../context/CollectionsContext'
 import { useCatalog } from '../../context/CatalogContext'
 import { useCart } from '../../context/CartContext'
@@ -53,7 +54,10 @@ function SearchResults({ results, query, onSelect, onSeeAll }) {
                     {product.name}
                   </span>
                   <span className="mt-0.5 block text-[11px] uppercase tracking-[0.1em] text-muted">
-                    {product.collection || product.brand}
+                    {collectionDisplayName(
+                      product.collectionSlug || product.categorySlug,
+                      product.collection || product.brand,
+                    )}
                   </span>
                 </span>
                 <span className="shrink-0 text-sm text-ink">

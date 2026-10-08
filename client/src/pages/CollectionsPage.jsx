@@ -35,8 +35,8 @@ export default function CollectionsPage() {
               Collections
             </h1>
             <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/80 md:text-base">
-              Explorez les univers de la maison : Maison MRZ, Lamas, Osma,
-              Dubai, Body Splash et Room Diffuseur.
+              Explorez les univers de la maison : Lamas, Maison MRZ, Collection
+              Dubai, Body Splash et Parfum d'intérieur.
             </p>
           </motion.div>
         </Container>

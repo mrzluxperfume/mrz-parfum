@@ -194,9 +194,12 @@ export default function Footer() {
               className="h-10 w-10 rounded-full object-cover"
             />
             <span>
-              <span className="block font-display text-base tracking-[0.14em] text-ink">
-                MRZ
-              </span>
+              <img
+                src="/logonav2.png"
+                alt="MRZ Perfume"
+                decoding="async"
+                className="block h-8 w-auto object-contain object-left"
+              />
               <span className="mt-0.5 block text-[10px] uppercase tracking-[0.16em] text-muted">
                 {brand.tagline}
               </span>
