@@ -2,6 +2,7 @@ import Hero from '../components/home/Hero'
 import CollectionsGrid from '../components/home/CollectionsGrid'
 import CategoryNav from '../components/home/CategoryNav'
 import EditorialGrid from '../components/home/EditorialGrid'
+import HomeTestimonials from '../components/home/HomeTestimonials'
 import ProductCarousel from '../components/product/ProductCarousel'
 import { useCatalog } from '../context/CatalogContext'
 
@@ -20,6 +21,7 @@ export default function HomePage() {
       />
       <CollectionsGrid />
       <EditorialGrid />
+      <HomeTestimonials />
       <CategoryNav />
     </>
   )

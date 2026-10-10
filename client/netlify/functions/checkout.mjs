@@ -1,5 +1,8 @@
 import { json, preflight, readJson } from "./http.mjs";
 import { clientUrl, mrzLogoFile, stripeClient } from "./stripe-session.mjs";
+import { discountFromCoupon, findPromotion } from "./coupon-stripe.mjs";
+import { checkoutLines } from "./offer-logic.mjs";
+import { activeOffers, readOffers } from "./offer-store.mjs";
 
 export async function handler(event) {
   const early = preflight(event);
@@ -26,25 +29,26 @@ export async function handler(event) {
       return json(400, { error: "Le panier est vide." });
     }
 
-    const lineItems = items.map((item) => {
-      const unit = Math.round(Number(item.price) * 100);
-      const quantity = Math.max(1, Number(item.quantity) || 1);
-      if (!item.name || !Number.isFinite(unit) || unit < 50) {
-        throw new Error("Article invalide");
+    const offers = activeOffers(await readOffers());
+    const { lineItems } = checkoutLines(items, offers);
+
+    const subtotalCents = lineItems.reduce(
+      (sum, line) => sum + line.price_data.unit_amount * line.quantity,
+      0,
+    );
+    let discounts;
+    let couponCode = "";
+    const requestedCode = String(body.couponCode || "").trim();
+    if (requestedCode) {
+      const promo = await findPromotion(stripe, requestedCode);
+      if (!promo) {
+        return json(400, { error: "Ce coupon n’est pas valide." });
       }
-      const label = item.volume ? `${item.name} — ${item.volume}` : String(item.name);
-      return {
-        quantity,
-        price_data: {
-          currency: "eur",
-          unit_amount: unit,
-          product_data: {
-            name: label,
-            description: "Paiement sécurisé de votre commande MRZ.",
-          },
-        },
-      };
-    });
+      const applied = discountFromCoupon(subtotalCents, promo.coupon);
+      if (applied.error) return json(400, { error: applied.error });
+      discounts = [{ promotion_code: promo.id }];
+      couponCode = promo.code;
+    }
 
     const logo = await mrzLogoFile(stripe).catch((err) => {
       console.error("[checkout] logo", err.message);
@@ -56,9 +60,10 @@ export async function handler(event) {
       adaptive_pricing: { enabled: false },
       customer_email: email,
       line_items: lineItems,
+      ...(discounts ? { discounts } : {}),
       success_url: `${clientUrl()}/cart?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${clientUrl()}/cart?payment=cancel`,
-      metadata: { name, phone, address, note },
+      metadata: { name, phone, address, note, coupon: couponCode },
       branding_settings: {
         display_name: "MRZ Perfume",
         button_color: "#23372d",

@@ -22,6 +22,11 @@ export default function CartPage() {
   const [searchParams] = useSearchParams()
   const [customer, setCustomer] = useState(emptyCustomer)
   const [note, setNote] = useState('')
+  const [couponDraft, setCouponDraft] = useState('')
+  const [coupon, setCoupon] = useState(null)
+  const [couponMessage, setCouponMessage] = useState('')
+  const [couponBusy, setCouponBusy] = useState(false)
+  const [offer, setOffer] = useState(null)
   const [status, setStatus] = useState('idle')
   const [orderId, setOrderId] = useState(null)
   const [errorMessage, setErrorMessage] = useState('')
@@ -77,6 +82,72 @@ export default function CartPage() {
     }
   }, [searchParams, placeOrder, clearCart])
 
+  const offerDiscount = offer?.discount || 0
+  const afterOffer = Math.max(
+    0,
+    Math.round((subtotal - offerDiscount) * 100) / 100,
+  )
+  const payable = coupon ? coupon.total : afterOffer
+
+  useEffect(() => {
+    if (!items.length) {
+      setOffer(null)
+      return undefined
+    }
+    let cancelled = false
+    api
+      .post('/offers/preview', { items })
+      .then(({ data }) => {
+        if (!cancelled) setOffer(data?.discount > 0 ? data : null)
+      })
+      .catch(() => {
+        if (!cancelled) setOffer(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [items])
+
+  useEffect(() => {
+    if (!coupon?.code) return undefined
+    let cancelled = false
+    api
+      .post('/coupons/preview', { code: coupon.code, subtotal: afterOffer })
+      .then(({ data }) => {
+        if (!cancelled) setCoupon(data)
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setCoupon(null)
+        setCouponMessage(
+          err.response?.data?.error || 'Ce coupon ne s’applique plus.',
+        )
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [afterOffer, coupon?.code])
+
+  const applyCoupon = async () => {
+    const code = couponDraft.trim()
+    if (!code) return
+    setCouponBusy(true)
+    setCouponMessage('')
+    try {
+      const { data } = await api.post('/coupons/preview', {
+        code,
+        subtotal: afterOffer,
+      })
+      setCoupon(data)
+      setCouponDraft(data.code)
+    } catch (err) {
+      setCoupon(null)
+      setCouponMessage(err.response?.data?.error || 'Ce coupon n’est pas valide.')
+    } finally {
+      setCouponBusy(false)
+    }
+  }
+
   const handleCheckout = async (e) => {
     e.preventDefault()
     if (!items.length) return
@@ -89,7 +160,12 @@ export default function CartPage() {
     setStatus('paying')
     setErrorMessage('')
     try {
-      const { data } = await api.post('/checkout', { customer, items, note })
+      const { data } = await api.post('/checkout', {
+        customer,
+        items,
+        note,
+        couponCode: coupon?.code || '',
+      })
       window.location.assign(data.url)
     } catch (err) {
       setStatus('error')
@@ -243,11 +319,48 @@ export default function CartPage() {
               >
                 <div className="border border-ink/10 bg-fog/60 p-5 md:p-6">
                   <p className="text-[11px] uppercase tracking-[0.16em] text-muted">
-                    Total
+                    {coupon || offer ? 'Total après réduction' : 'Total'}
                   </p>
                   <p className="mt-1 font-display text-3xl tabular-nums">
-                    {formatPrice(subtotal)}
+                    {formatPrice(payable)}
                   </p>
+                  {offer ? (
+                    <p className="mt-2 text-sm text-ink/65">
+                      Offre 2e produit − {formatPrice(offer.discount)} sur le
+                      moins cher
+                    </p>
+                  ) : null}
+                  {coupon ? (
+                    <p className="mt-2 text-sm text-ink/65">
+                      {formatPrice(afterOffer)} − {formatPrice(coupon.discount)}{' '}
+                      ({coupon.code})
+                    </p>
+                  ) : null}
+                </div>
+
+                <div>
+                  <p className="mb-1.5 text-[11px] uppercase tracking-[0.14em] text-ink/70">
+                    Code promo
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      className="field-input uppercase"
+                      value={couponDraft}
+                      onChange={(e) => setCouponDraft(e.target.value.toUpperCase())}
+                      placeholder="MRZ10"
+                    />
+                    <button
+                      type="button"
+                      onClick={applyCoupon}
+                      disabled={couponBusy}
+                      className="shrink-0 border border-ink px-4 text-[11px] uppercase tracking-[0.14em] hover:bg-ink hover:text-white disabled:opacity-50"
+                    >
+                      {couponBusy ? '…' : 'Appliquer'}
+                    </button>
+                  </div>
+                  {couponMessage ? (
+                    <p className="mt-2 text-sm text-red-700">{couponMessage}</p>
+                  ) : null}
                 </div>
 
                 <Field label="Nom complet *">

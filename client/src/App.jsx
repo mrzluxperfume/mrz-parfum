@@ -21,7 +21,8 @@ import CollectionsPage from './pages/CollectionsPage'
 import ShopPage from './pages/ShopPage'
 import CartPage from './pages/CartPage'
 import FindPerfumePage from './pages/FindPerfumePage'
-import PlaceholderPage from './pages/PlaceholderPage'
+import FaqPage from './pages/FaqPage'
+import TermsPage from './pages/TermsPage'
 import PrivacyPage from './pages/PrivacyPage'
 import ProductPage from './pages/ProductPage'
 import AdminLoginPage from './pages/admin/AdminLoginPage'
@@ -30,6 +31,8 @@ import AdminProductsPage from './pages/admin/AdminProductsPage'
 import AdminOrdersPage from './pages/admin/AdminOrdersPage'
 import AdminCollectionsPage from './pages/admin/AdminCollectionsPage'
 import AdminNewsletterPage from './pages/admin/AdminNewsletterPage'
+import AdminCouponsPage from './pages/admin/AdminCouponsPage'
+import AdminOffersPage from './pages/admin/AdminOffersPage'
 
 export default function App() {
   return (
@@ -49,6 +52,8 @@ export default function App() {
                   <Route path="collections" element={<AdminCollectionsPage />} />
                   <Route path="orders" element={<AdminOrdersPage />} />
                   <Route path="newsletter" element={<AdminNewsletterPage />} />
+                  <Route path="coupons" element={<AdminCouponsPage />} />
+                  <Route path="offers" element={<AdminOffersPage />} />
                 </Route>
 
                 <Route element={<MainLayout />}>
@@ -73,11 +78,8 @@ export default function App() {
                   <Route path="contact" element={<ContactPage />} />
                   <Route path="cart" element={<CartPage />} />
                   <Route path="account" element={<AccountPage />} />
-                  <Route path="faq" element={<PlaceholderPage title="FAQ" />} />
-                  <Route
-                    path="terms"
-                    element={<PlaceholderPage title="Conditions générales" />}
-                  />
+                  <Route path="faq" element={<FaqPage />} />
+                  <Route path="terms" element={<TermsPage />} />
                   <Route path="privacy" element={<PrivacyPage />} />
                 </Route>
               </Routes>

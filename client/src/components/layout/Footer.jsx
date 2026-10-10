@@ -200,9 +200,6 @@ export default function Footer() {
                 decoding="async"
                 className="block h-8 w-auto object-contain object-left"
               />
-              <span className="mt-0.5 block text-[10px] uppercase tracking-[0.16em] text-muted">
-                {brand.tagline}
-              </span>
             </span>
           </Link>
 

@@ -8,6 +8,8 @@ import {
   Menu,
   Package,
   ShoppingBag,
+  TicketPercent,
+  Tags,
   X,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -22,6 +24,8 @@ const navItems = [
   { to: '/admin/collections', icon: Folders, label: 'Collections' },
   { to: '/admin/orders', icon: ShoppingBag, label: 'Commandes', badge: true },
   { to: '/admin/newsletter', icon: Mail, label: 'Newsletter' },
+  { to: '/admin/coupons', icon: TicketPercent, label: 'Coupons' },
+  { to: '/admin/offers', icon: Tags, label: 'Offres' },
 ]
 
 export default function AdminLayout() {

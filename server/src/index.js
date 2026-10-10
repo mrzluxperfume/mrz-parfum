@@ -9,6 +9,8 @@ import contactRouter from "./routes/contact.js";
 import checkoutRouter from "./routes/checkout.js";
 import authRouter from "./routes/auth.js";
 import newsletterRouter from "./routes/newsletter.js";
+import couponsRouter from "./routes/coupons.js";
+import offersRouter from "./routes/offers.js";
 import { loadLocalProducts } from "./data.js";
 
 const app = express();
@@ -37,6 +39,8 @@ app.use("/api/products", productsRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/contact", contactRouter);
 app.use("/api/checkout", checkoutRouter);
+app.use("/api/coupons", couponsRouter);
+app.use("/api/offers", offersRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/newsletter", newsletterRouter);
 

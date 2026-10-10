@@ -11,7 +11,7 @@ const presetTestimonials = [
   {
     id: 'preset-1',
     message: 'Commande reçue super rapidement',
-    rating: 5,
+    rating: 4,
   },
   {
     id: 'preset-2',
@@ -22,7 +22,7 @@ const presetTestimonials = [
   {
     id: 'preset-3',
     message: 'First order on the website and I’m really satisfied.',
-    rating: 5,
+    rating: 4,
   },
   {
     id: 'preset-4',
@@ -33,7 +33,7 @@ const presetTestimonials = [
   {
     id: 'preset-5',
     message: 'Livraison rapide merci',
-    rating: 5,
+    rating: 4,
   },
   {
     id: 'preset-6',

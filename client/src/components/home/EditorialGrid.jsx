@@ -26,7 +26,7 @@ export default function EditorialGrid() {
       },
       {
         type: 'copy',
-        title: ['Révéler votre', 'singularité'],
+        title: ['Une sélection olfactive', 'soigneusement pensée'],
         text: "Trouvez la fragrance qui évoque l'élégance et l'émotion.",
         cta: 'Voir les nouveautés',
         href: '/shop?filter=new',
@@ -37,10 +37,10 @@ export default function EditorialGrid() {
       },
       {
         type: 'copy',
-        title: ['Une sélection', 'exquise'],
-        text: brand.aboutExperience,
-        cta: 'Nos parfums',
-        href: '/shop',
+        title: ['L’attraction', 'olfactive'],
+        text: 'Laissez votre personnalité s’exprimer. Découvrez la fragrance, qui vous convient.',
+        cta: 'Trouver mon parfum',
+        href: '/trouver-mon-parfum',
       },
       {
         type: 'image',
