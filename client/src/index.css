@@ -70,46 +70,49 @@
   .field-input {
     @apply w-full border border-ink/20 bg-white px-3 py-3 text-sm text-ink outline-none transition placeholder:text-ink/35 focus:border-ink;
   }
+}
 
-  /* Continuous top-bar ticker — left → right, slow */
-  .topbar-marquee {
-    animation: topbar-marquee-ltr 55s linear infinite;
-    will-change: transform;
+/* Marquees live outside @layer so iOS Safari actually runs them. */
+@keyframes topbar-marquee-ltr {
+  from {
+    transform: translate3d(-33.333%, 0, 0);
   }
-
-  @keyframes topbar-marquee-ltr {
-    from {
-      transform: translateX(-33.333%);
-    }
-    to {
-      transform: translateX(0%);
-    }
+  to {
+    transform: translate3d(0, 0, 0);
   }
+}
 
-  .testimonials-marquee {
-    animation: topbar-marquee-ltr 70s linear infinite;
-    will-change: transform;
-  }
+.topbar-marquee {
+  left: 0;
+  animation: topbar-marquee-ltr 55s linear infinite;
+  will-change: transform;
+}
 
+.testimonials-marquee {
+  animation: topbar-marquee-ltr 70s linear infinite;
+  will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
   .testimonials-marquee:hover {
     animation-play-state: paused;
   }
+}
 
-  @media (prefers-reduced-motion: reduce) {
-    .topbar-marquee {
-      animation: none;
-      transform: none;
-      position: relative;
-      justify-content: center;
-      width: 100%;
-    }
+@media (prefers-reduced-motion: reduce) {
+  .topbar-marquee {
+    animation: none;
+    transform: none;
+    position: relative;
+    justify-content: center;
+    width: 100%;
+  }
 
-    .testimonials-marquee {
-      animation: none;
-      transform: none;
-      width: 100%;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
+  .testimonials-marquee {
+    animation: none;
+    transform: none;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }

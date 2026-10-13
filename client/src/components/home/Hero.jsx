@@ -12,9 +12,9 @@ const heroSlides = [
     alt: 'MRZ Perfume — fragrances de la maison',
     // Desktop: flacons à droite, texte à gauche
     objectPosition: '72% center',
-    tabletObjectPosition: '78% center',
-    // Mobile: cadrage sur les flacons
-    mobileObjectPosition: '85% center',
+    tabletObjectPosition: '58% center',
+    // Mobile : le côté droit de la photo (flacons) entièrement visible
+    mobileObjectPosition: '100% center',
     theme: 'light',
     intro: {
       title: "L'art du parfum",
@@ -51,20 +51,26 @@ export default function Hero() {
 
   useEffect(() => {
     const mobileMq = window.matchMedia('(max-width: 767px)')
-    const tabletMq = window.matchMedia(
-      '(min-width: 768px) and (max-width: 1023px)',
+    const portraitMq = window.matchMedia(
+      '(min-width: 768px) and (max-width: 1100px) and (orientation: portrait)',
+    )
+    const landscapeMq = window.matchMedia(
+      '(min-width: 1024px) and (max-width: 1400px) and (max-height: 1100px) and (orientation: landscape)',
     )
     const apply = () => {
       if (mobileMq.matches) setViewport('mobile')
-      else if (tabletMq.matches) setViewport('tablet')
+      else if (portraitMq.matches) setViewport('portrait')
+      else if (landscapeMq.matches) setViewport('landscape')
       else setViewport('desktop')
     }
     apply()
     mobileMq.addEventListener('change', apply)
-    tabletMq.addEventListener('change', apply)
+    portraitMq.addEventListener('change', apply)
+    landscapeMq.addEventListener('change', apply)
     return () => {
       mobileMq.removeEventListener('change', apply)
-      tabletMq.removeEventListener('change', apply)
+      portraitMq.removeEventListener('change', apply)
+      landscapeMq.removeEventListener('change', apply)
     }
   }, [])
 
@@ -80,23 +86,32 @@ export default function Hero() {
   const lightTheme = active.theme === 'light'
   const isPanelSlide = Boolean(active.panel)
   const isIntroSlide = Boolean(active.intro)
-  const stacked = viewport !== 'desktop'
+  const stacked = viewport === 'mobile' || viewport === 'portrait'
+  const portraitIntro = viewport === 'portrait' && isIntroSlide
+  const ipadLandscape = viewport === 'landscape'
 
-  const objectPosition =
-    viewport === 'mobile'
+  const objectPosition = portraitIntro
+    ? 'center center'
+    : viewport === 'mobile'
       ? active.mobileObjectPosition || active.objectPosition
-      : viewport === 'tablet'
+      : viewport === 'portrait'
         ? active.tabletObjectPosition || active.objectPosition
-        : active.objectPosition || 'center center'
+        : ipadLandscape && isIntroSlide
+          ? '100% 100%'
+          : active.objectPosition || 'center center'
 
   return (
     <section
       className={`relative isolate overflow-hidden ${
         lightTheme ? 'bg-[#f3ece4] text-ink' : 'bg-ink text-white'
       } ${
-        stacked
-          ? 'min-h-[min(92vh,820px)]'
-          : 'min-h-[70vh] md:min-h-[82vh]'
+        portraitIntro
+          ? ''
+          : stacked
+            ? 'min-h-[min(92vh,820px)]'
+            : ipadLandscape
+              ? 'min-h-[78vh]'
+              : 'min-h-[70vh] md:min-h-[82vh]'
       }`}
     >
       <div className="absolute inset-0">
@@ -110,11 +125,13 @@ export default function Hero() {
             exit={{ opacity: 0 }}
             transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
             className={
-              stacked
-                ? isPanelSlide
-                  ? 'absolute inset-x-0 top-0 h-[52%] w-full object-cover sm:h-[54%]'
-                  : 'absolute inset-x-0 top-0 h-[48%] w-full object-cover sm:h-[52%] md:h-[56%]'
-                : 'absolute inset-0 h-full w-full object-cover'
+              portraitIntro
+                ? 'absolute top-0 right-0 h-[50vw] w-full max-w-none object-cover'
+                : stacked
+                  ? isPanelSlide
+                    ? 'absolute inset-x-0 top-0 h-[52%] w-full object-cover sm:h-[54%]'
+                    : 'absolute inset-x-0 top-0 h-[48%] w-full object-cover sm:h-[52%]'
+                  : 'absolute inset-0 h-full w-full object-cover'
             }
             style={{ objectPosition }}
           />
@@ -122,7 +139,11 @@ export default function Hero() {
 
         {/* Zones sous l’image (mobile / tablette) */}
         {stacked && isIntroSlide && (
-          <div className="absolute inset-x-0 bottom-0 top-[48%] bg-[#f3ece4] sm:top-[52%] md:top-[56%]" />
+          <div
+            className={`absolute inset-x-0 bottom-0 bg-[#f3ece4] ${
+              portraitIntro ? 'top-[50vw]' : 'top-[48%] sm:top-[52%]'
+            }`}
+          />
         )}
         {stacked && isPanelSlide && (
           <div className="absolute inset-x-0 bottom-0 top-[52%] bg-ink sm:top-[54%]" />
@@ -130,7 +151,13 @@ export default function Hero() {
 
         {/* Lisibilité desktop */}
         {!stacked && isIntroSlide && (
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#f3ece4]/85 via-[#f3ece4]/35 to-transparent lg:from-[#f3ece4]/55 lg:via-transparent" />
+          <div
+            className={`pointer-events-none absolute inset-0 bg-gradient-to-r to-transparent ${
+              ipadLandscape
+                ? 'from-[#f3ece4]/80 via-[#f3ece4]/25'
+                : 'from-[#f3ece4]/85 via-[#f3ece4]/35 lg:from-[#f3ece4]/55 lg:via-transparent'
+            }`}
+          />
         )}
         {!stacked && isPanelSlide && (
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-black/25 via-transparent to-transparent" />
@@ -139,9 +166,13 @@ export default function Hero() {
 
       <div
         className={`container-mrz relative flex flex-col ${
-          stacked
-            ? 'min-h-[min(92vh,820px)] pb-8 pt-20'
-            : 'min-h-[70vh] pb-12 pt-24 md:min-h-[calc(82vh+10rem)] md:pb-24 md:pt-32'
+          portraitIntro
+            ? 'pb-8'
+            : stacked
+              ? 'min-h-[min(92vh,820px)] pb-8 pt-20'
+              : ipadLandscape
+                ? 'min-h-[78vh] pb-10 pt-28'
+                : 'min-h-[70vh] pb-12 pt-24 md:min-h-[calc(82vh+10rem)] md:pb-24 md:pt-32'
         }`}
       >
         {active.panel ? (
@@ -182,9 +213,11 @@ export default function Hero() {
         ) : active.intro ? (
           <div
             className={
-              stacked
-                ? 'flex flex-1 flex-col justify-end pt-[50%] sm:pt-[54%] md:pt-[58%]'
-                : 'flex flex-1 flex-col justify-end pb-6 lg:pb-8 xl:pb-10'
+              portraitIntro
+                ? 'flex flex-1 flex-col justify-start pt-[50vw]'
+                : stacked
+                  ? 'flex flex-1 flex-col justify-end pt-[50%] sm:pt-[54%]'
+                  : 'flex flex-1 flex-col justify-end pb-6 lg:pb-8 xl:pb-10'
             }
           >
             {active.intro.title && (
@@ -211,7 +244,11 @@ export default function Hero() {
             >
               <p
                 className={`max-w-[min(520px,100%)] text-[clamp(0.85rem,1.2vw,1.125rem)] leading-relaxed text-ink lg:max-w-[560px] lg:leading-[1.75] ${
-                  active.intro.title ? 'mt-4 sm:mt-5 lg:mt-[11.5rem]' : ''
+                  !active.intro.title
+                    ? ''
+                    : viewport === 'desktop'
+                      ? 'mt-4 sm:mt-5 lg:mt-[11.5rem]'
+                      : 'mt-4 sm:mt-5'
                 }`}
               >
                 {active.intro.text}
