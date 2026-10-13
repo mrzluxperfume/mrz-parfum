@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Star } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react'
 import { isSupabaseConfigured, supabase } from '../../lib/supabase'
 
 const fallbackTestimonials = [
@@ -40,10 +40,42 @@ function StarRating({ value = 5 }) {
   )
 }
 
+function TestimonialCard({ item, hidden }) {
+  return (
+    <article
+      aria-hidden={hidden || undefined}
+      className="flex aspect-square w-[min(280px,78vw)] shrink-0 flex-col border border-ink/10 bg-fog p-5 sm:w-[300px] sm:p-6"
+    >
+      <StarRating value={item.rating} />
+      <p className="mt-4 flex-1 overflow-hidden text-sm leading-relaxed text-ink/80">
+        « {item.message} »
+      </p>
+      {item.name ? (
+        <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-muted">
+          {item.name}
+        </p>
+      ) : null}
+    </article>
+  )
+}
+
 export default function HomeTestimonials() {
+  const scrollerRef = useRef(null)
+  const [manualScroll, setManualScroll] = useState(() =>
+    typeof window !== 'undefined' &&
+    window.matchMedia('(max-width: 1399px)').matches,
+  )
   const [items, setItems] = useState(() =>
     isSupabaseConfigured ? [] : fallbackTestimonials,
   )
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1399px)')
+    const apply = () => setManualScroll(mq.matches)
+    apply()
+    mq.addEventListener('change', apply)
+    return () => mq.removeEventListener('change', apply)
+  }, [])
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return undefined
@@ -79,27 +111,60 @@ export default function HomeTestimonials() {
 
   if (!items.length) return null
 
+  const scrollByCard = (direction) => {
+    const el = scrollerRef.current
+    if (!el) return
+    const card = el.querySelector('article')
+    const styles = getComputedStyle(el)
+    const gap = Number.parseFloat(styles.columnGap || styles.gap) || 16
+    const amount = (card?.offsetWidth || 280) + gap
+    el.scrollBy({ left: direction * amount, behavior: 'smooth' })
+  }
+
+  if (manualScroll) {
+    return (
+      <section className="py-10 md:py-14" aria-label="Témoignages">
+        <div className="flex items-center gap-2 px-3 sm:gap-3 sm:px-4">
+          <button
+            type="button"
+            aria-label="Témoignages précédents"
+            onClick={() => scrollByCard(-1)}
+            className="flex size-10 shrink-0 items-center justify-center border border-ink bg-ink text-white"
+          >
+            <ChevronLeft className="size-5" strokeWidth={1.5} />
+          </button>
+          <div
+            ref={scrollerRef}
+            className="flex min-w-0 flex-1 gap-4 overflow-x-auto scroll-smooth sm:gap-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {items.map((item) => (
+              <TestimonialCard key={item.id} item={item} />
+            ))}
+          </div>
+          <button
+            type="button"
+            aria-label="Témoignages suivants"
+            onClick={() => scrollByCard(1)}
+            className="flex size-10 shrink-0 items-center justify-center border border-ink bg-ink text-white"
+          >
+            <ChevronRight className="size-5" strokeWidth={1.5} />
+          </button>
+        </div>
+      </section>
+    )
+  }
+
   const loop = [...items, ...items, ...items]
 
   return (
     <section className="overflow-hidden py-10 md:py-14" aria-label="Témoignages">
       <div className="testimonials-marquee flex w-max gap-4 px-4 sm:gap-5">
         {loop.map((item, index) => (
-          <article
+          <TestimonialCard
             key={`${item.id}-${index}`}
-            aria-hidden={index >= items.length || undefined}
-            className="flex aspect-square w-[min(280px,78vw)] shrink-0 flex-col border border-ink/10 bg-fog p-5 sm:w-[300px] sm:p-6"
-          >
-            <StarRating value={item.rating} />
-            <p className="mt-4 flex-1 overflow-hidden text-sm leading-relaxed text-ink/80">
-              « {item.message} »
-            </p>
-            {item.name ? (
-              <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-muted">
-                {item.name}
-              </p>
-            ) : null}
-          </article>
+            item={item}
+            hidden={index >= items.length}
+          />
         ))}
       </div>
     </section>
