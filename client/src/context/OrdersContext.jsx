@@ -33,27 +33,49 @@ function persistLocal(list) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
 }
 
+async function fetchOrders() {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return (data || []).map(orderFromRow)
+}
+
 export function OrdersProvider({ children }) {
   const [orders, setOrders] = useState(() =>
     isSupabaseConfigured ? [] : loadLocalOrders(),
   )
+  const [loadError, setLoadError] = useState('')
+
+  const refreshOrders = useCallback(async () => {
+    if (!isSupabaseConfigured || !supabase) return
+
+    try {
+      const currentOrders = await fetchOrders()
+      setLoadError('')
+      setOrders(currentOrders)
+    } catch (error) {
+      setOrders([])
+      setLoadError(error.message || 'Erreur de connexion à Supabase.')
+    }
+  }, [])
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return undefined
 
     let cancelled = false
     ;(async () => {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (cancelled) return
-      if (error) {
-        setOrders(loadLocalOrders())
-        return
+      try {
+        const currentOrders = await fetchOrders()
+        if (cancelled) return
+        setLoadError('')
+        setOrders(currentOrders)
+      } catch (error) {
+        if (cancelled) return
+        setOrders([])
+        setLoadError(error.message || 'Erreur de connexion à Supabase.')
       }
-      setOrders((data || []).map(orderFromRow))
     })()
 
     return () => {
@@ -143,13 +165,15 @@ export function OrdersProvider({ children }) {
   const value = useMemo(
     () => ({
       orders,
+      loadError,
       source: isSupabaseConfigured ? 'supabase' : 'local',
+      refreshOrders,
       placeOrder,
       updateOrderStatus,
       deleteOrder,
       newCount: orders.filter((o) => o.status === 'new').length,
     }),
-    [orders, placeOrder, updateOrderStatus, deleteOrder],
+    [orders, loadError, refreshOrders, placeOrder, updateOrderStatus, deleteOrder],
   )
 
   return (

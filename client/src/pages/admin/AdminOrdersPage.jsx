@@ -16,7 +16,7 @@ const STATUS_LABEL = Object.fromEntries(
 )
 
 export default function AdminOrdersPage() {
-  const { orders, updateOrderStatus, deleteOrder } = useOrders()
+  const { orders, loadError, source, refreshOrders, updateOrderStatus, deleteOrder } = useOrders()
   const [filter, setFilter] = useState('all')
   const [selectedId, setSelectedId] = useState(null)
 
@@ -32,12 +32,33 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-display text-3xl md:text-4xl">Commandes</h2>
-        <p className="mt-2 text-sm text-ink/65">
-          Commandes reçues depuis le panier du site.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="font-display text-3xl md:text-4xl">Commandes</h2>
+          <p className="mt-2 text-sm text-ink/65">
+            Commandes reçues depuis le panier du site.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={refreshOrders}
+          disabled={source === 'local'}
+          className="border border-ink/20 px-4 py-2 text-[10px] uppercase tracking-[0.14em] hover:border-ink"
+        >
+          Actualiser
+        </button>
       </div>
+
+      {loadError ? (
+        <p role="alert" className="border border-red-300 bg-red-50 p-4 text-sm text-red-800">
+          Impossible de charger les commandes depuis Supabase : {loadError}
+        </p>
+      ) : null}
+      {source === 'local' ? (
+        <p role="alert" className="border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          Supabase n’est pas configuré dans le site : ces commandes sont stockées uniquement sur cet appareil.
+        </p>
+      ) : null}
 
       <div className="flex flex-wrap gap-2">
         <FilterChip

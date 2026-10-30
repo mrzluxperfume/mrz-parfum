@@ -46,7 +46,7 @@ Ajoutez :
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET` (secret de signature de l’endpoint ci-dessous)
 - `SMTP_USER` / `SMTP_PASS`
-- `MAIL_TO` (email qui reçoit les nouvelles commandes; sinon `SMTP_USER`)
+- Les alertes de nouvelle commande sont envoyées à `mrz.lux.perfume@gmail.com`.
 - `VITE_ADMIN_USER` / `VITE_ADMIN_PASS` (admin)
 
 ## 4. Emails et notifications Stripe

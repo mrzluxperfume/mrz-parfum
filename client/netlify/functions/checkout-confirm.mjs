@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { json, preflight, readJson } from "./http.mjs";
+import { deliverOrderEmails } from "./order-email-delivery.mjs";
 import { reserveOrderNumber } from "./order-number.mjs";
+import { persistPaidOrder } from "./paid-order.mjs";
 import { stripeClient } from "./stripe-session.mjs";
 
 function getSupabase() {
@@ -35,7 +37,22 @@ export async function handler(event) {
       return json(402, { error: "Le paiement n'est pas encore confirmé." });
     }
 
-    const orderNumber = await reserveOrderNumber(getSupabase(), session.id);
+    const supabase = getSupabase();
+    const orderNumber = await reserveOrderNumber(supabase, session.id);
+    await persistPaidOrder(supabase, session, orderNumber);
+    const emailSession = {
+      ...session,
+      metadata: { ...session.metadata, order_number: orderNumber },
+    };
+    try {
+      await deliverOrderEmails(
+        supabase,
+        emailSession,
+        session.line_items?.data || [],
+      );
+    } catch (emailError) {
+      console.error("[checkout:confirm] Order emails pending:", emailError.message);
+    }
 
     const items = (session.line_items?.data || []).map((line) => ({
       id: line.id,

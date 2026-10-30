@@ -27,7 +27,7 @@ MAIL_TO=votre-email@gmail.com
 ### Variables Stripe requises
 
 ```
-STRIPE_SECRET_KEY=sk_live_...
+STRIPE_SECRET_KEY=sk_test_... ou sk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
@@ -65,7 +65,7 @@ VITE_SUPABASE_URL=https://votre-projet.supabase.co
 2. Allez dans **Developers > Webhooks**
 3. Cliquez sur **Add endpoint**
 4. Configurez :
-   - **URL du webhook** : `https://www.mrz-perfume.fr/.netlify/functions/stripe-webhook`
+   - **URL du webhook** : `https://mrz-perfume.fr/api/stripe/webhook`
    - **Description** : "Notifications email commandes MRZ"
    - **Version API** : Dernière version
    - **Événements à écouter** :
@@ -83,16 +83,51 @@ Pour tester en développement :
 1. Créez un webhook de test avec l'URL : `https://votre-site-test.netlify.app/.netlify/functions/stripe-webhook`
 2. Utilisez les clés de test Stripe (`sk_test_...`)
 3. Utilisez le signing secret du webhook de test
+4. Configurez ces deux variables ensemble dans l’environnement de test Netlify.
 
 Pour la production :
 
 1. Créez un webhook de production avec l'URL finale
 2. Utilisez les clés live Stripe (`sk_live_...`)
 3. Utilisez le signing secret du webhook de production
+4. Gardez les variables live uniquement dans l’environnement de production.
+
+Le webhook vérifie le paiement, enregistre la commande dans `orders`, puis envoie les emails. La page de retour confirme également la commande pour afficher immédiatement son numéro; l’enregistrement est idempotent afin de ne pas créer de doublon.
 
 ---
 
-## 4. Flux des Notifications Email
+## 4. Recevoir les emails Stripe et les emails du site
+
+Chaque paiement réussi peut produire **quatre messages distincts** :
+
+| Destinataire | Email Stripe | Email du site (NodeMailer) |
+|---|---|---|
+| Client | Reçu Stripe du paiement | Confirmation MRZ avec numéro, articles, quantités, total et coordonnées de livraison |
+| Boutique | Alerte de paiement Stripe | Notification MRZ à `mrz.lux.perfume@gmail.com` avec les articles et coordonnées du client |
+
+### Emails Stripe
+
+- **Reçu au client** : le checkout transmet déjà l'email du client à `payment_intent_data.receipt_email`. Dans le Dashboard Stripe, activez l'envoi des reçus pour les paiements réussis dans **Settings > Customer emails > Successful payments** (le libellé peut varier selon la langue du Dashboard).
+- **Alerte à la boutique** : dans les paramètres de notifications du compte Stripe, activez les notifications email pour les paiements réussis et vérifiez que le compte destinataire est `mrz.lux.perfume@gmail.com`.
+- Si vous testez, vérifiez aussi les réglages du **mode test**. Stripe et le site ont des paramètres séparés pour les emails.
+
+Stripe contrôle ces deux emails natifs depuis son Dashboard : le code du site ne peut pas forcer Stripe à les envoyer si ces options sont désactivées.
+
+### Emails envoyés par le site
+
+Dans Netlify, configurez les variables SMTP (`SMTP_USER`, `SMTP_PASS`, `SMTP_HOST`, `SMTP_PORT`). À la confirmation du paiement et lors du webhook de secours, le site envoie les deux confirmations NodeMailer. Le destinataire boutique est fixé à `mrz.lux.perfume@gmail.com`; le client est pris depuis l'adresse fournie au checkout Stripe. L'état d'envoi, commun aux deux déclencheurs pour éviter les doublons, est enregistré dans `public.stripe_order_email_deliveries`.
+
+Pour vérifier l'envoi, consultez les logs Netlify de `checkout-confirm` et `stripe-webhook`, puis la table `public.stripe_order_email_deliveries`. Les colonnes `merchant_email_status` et `customer_email_status` doivent être `sent`; `merchant_email_error` ou `customer_email_error` explique un échec.
+
+Exécutez le fichier `supabase/stripe-order-email-notifications.sql` dans le SQL Editor Supabase après le déploiement. Il crée la table de suivi idempotente utilisée par les deux fonctions.
+
+### Important : URL du webhook
+
+Utilisez le domaine canonique **sans `www`** ci-dessus. Cette route `/api/stripe/webhook` est réécrite en interne vers la fonction Netlify `stripe-webhook`. L'adresse `/.netlify/functions/stripe-webhook` est également utilisable directement. Consultez l'historique des livraisons Stripe : chaque tentative doit répondre en HTTP 2xx. Si une tentative échoue, ouvrez ses détails et vérifiez le code HTTP et le corps de la réponse dans les logs de la fonction Netlify.
+
+---
+
+## 5. Flux des Notifications Email
 
 ### A. Lors d'un paiement réussi (Automatique via Webhook Stripe)
 
@@ -104,8 +139,8 @@ Pour la production :
 3. Le webhook génère un numéro de commande (ex: MR12345)
    ↓
 4. Deux emails sont envoyés automatiquement :
-   - Email au propriétaire (MAIL_TO) avec détails de commande
-   - Email au client avec confirmation de paiement
+   - Email à `mrz.lux.perfume@gmail.com` avec les détails de commande
+   - Email au client avec confirmation de paiement, envoyé à l'adresse saisie au checkout
 ```
 
 **Fichiers concernés** :
@@ -131,7 +166,7 @@ Pour la production :
 
 ---
 
-## 5. Structure de la Base de Données
+## 6. Structure de la Base de Données
 
 ### Tables créées automatiquement
 
@@ -161,7 +196,7 @@ Ces tables sont créées via le fichier :
 
 ---
 
-## 6. Numérotation des Commandes
+## 7. Numérotation des Commandes
 
 Le système génère automatiquement des numéros de commande au format **MR12345** :
 
@@ -177,7 +212,7 @@ Le numéro est :
 
 ---
 
-## 7. Test du Système
+## 8. Test du Système
 
 ### Tester les emails en local
 
@@ -208,7 +243,7 @@ stripe trigger checkout.session.completed
 
 ---
 
-## 8. Dépannage
+## 9. Dépannage
 
 ### Les emails ne sont pas envoyés
 
@@ -238,7 +273,7 @@ stripe trigger checkout.session.completed
 
 ---
 
-## 9. Améliorations Futures
+## 10. Améliorations Futures
 
 - [ ] Ajouter un système de retry automatique pour les emails échoués
 - [ ] Implémenter des templates d'email personnalisables

@@ -13,6 +13,24 @@ create table if not exists public.stripe_order_email_notifications (
 
 alter table public.stripe_order_email_notifications enable row level security;
 
+create table if not exists public.stripe_order_email_deliveries (
+  checkout_session_id text primary key,
+  merchant_email_status text not null default 'pending'
+    check (merchant_email_status in ('pending', 'processing', 'sent', 'failed')),
+  merchant_email_error text,
+  customer_email_status text not null default 'pending'
+    check (customer_email_status in ('pending', 'processing', 'sent', 'failed')),
+  customer_email_error text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.stripe_order_email_deliveries enable row level security;
+alter table public.stripe_order_email_deliveries
+  add column if not exists merchant_email_error text;
+alter table public.stripe_order_email_deliveries
+  add column if not exists customer_email_error text;
+
 create table if not exists public.order_number_registry (
   checkout_session_id text primary key,
   order_number text not null unique

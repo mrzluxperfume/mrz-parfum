@@ -3,6 +3,8 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { reserveOrderNumber } from "../../../client/netlify/functions/order-number.mjs";
+import { deliverOrderEmails } from "../../../client/netlify/functions/order-email-delivery.mjs";
+import { persistPaidOrder } from "../../../client/netlify/functions/paid-order.mjs";
 import { supabase } from "../supabase.js";
 import Stripe from "stripe";
 import {
@@ -153,6 +155,20 @@ router.post("/confirm", async (req, res) => {
     }
 
     const orderNumber = await reserveOrderNumber(supabase, session.id);
+    await persistPaidOrder(supabase, session, orderNumber);
+    const emailSession = {
+      ...session,
+      metadata: { ...session.metadata, order_number: orderNumber },
+    };
+    try {
+      await deliverOrderEmails(
+        supabase,
+        emailSession,
+        session.line_items?.data || [],
+      );
+    } catch (emailError) {
+      console.error("[checkout:confirm] Order emails pending:", emailError.message);
+    }
 
     const items = (session.line_items?.data || []).map((line) => ({
       id: line.id,

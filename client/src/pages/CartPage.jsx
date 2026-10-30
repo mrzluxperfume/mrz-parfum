@@ -5,7 +5,6 @@ import Container from '../components/ui/Container'
 import Button from '../components/ui/Button'
 import NoIndex from '../components/NoIndex'
 import { useCart } from '../context/CartContext'
-import { useOrders } from '../context/OrdersContext'
 import api from '../services/api'
 import { formatPrice } from '../utils/format'
 
@@ -18,7 +17,6 @@ const emptyCustomer = {
 
 export default function CartPage() {
   const { items, subtotal, updateQuantity, removeItem, clearCart } = useCart()
-  const { placeOrder } = useOrders()
   const [searchParams] = useSearchParams()
   const [customer, setCustomer] = useState(emptyCustomer)
   const [note, setNote] = useState('')
@@ -60,18 +58,15 @@ export default function CartPage() {
     setStatus('paying')
     api
       .post('/checkout/confirm', { sessionId })
-      .then(async ({ data }) => {
+      .then(({ data }) => {
         if (cancelled) return
-        const order = await placeOrder({
-          id: data.orderNumber,
-          customer: data.customer,
-          items: data.items,
-          note: data.note,
-        })
-        if (cancelled) return
-        sessionStorage.setItem(flag, order.id)
+        const confirmedOrderId = String(data.orderNumber || '')
+        if (!/^MR\d{5}$/.test(confirmedOrderId)) {
+          throw new Error('Le numéro de commande est manquant ou invalide.')
+        }
+        sessionStorage.setItem(flag, confirmedOrderId)
         clearCart()
-        setOrderId(order.id)
+        setOrderId(confirmedOrderId)
         setStatus('success')
       })
       .catch((err) => {
@@ -85,7 +80,7 @@ export default function CartPage() {
     return () => {
       cancelled = true
     }
-  }, [searchParams, placeOrder, clearCart])
+  }, [searchParams, clearCart])
 
   const offerDiscount = offer?.discount || 0
   const afterOffer = Math.max(

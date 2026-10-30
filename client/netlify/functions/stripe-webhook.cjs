@@ -23,57 +23,6 @@ async function ensureEvent(supabase, event, session) {
   throw error
 }
 
-async function claimDelivery(supabase, eventId, column) {
-  const { data, error } = await supabase
-    .from(EVENT_TABLE)
-    .update({ [column]: 'processing', last_error: null, updated_at: new Date().toISOString() })
-    .eq('stripe_event_id', eventId)
-    .in(column, ['pending', 'failed'])
-    .select('stripe_event_id')
-    .maybeSingle()
-  if (error) throw error
-  return Boolean(data)
-}
-
-async function setDeliveryStatus(supabase, eventId, column, status) {
-  const { error } = await supabase
-    .from(EVENT_TABLE)
-    .update({
-      [column]: status,
-      status: status === 'failed' ? 'failed' : 'processing',
-      last_error: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('stripe_event_id', eventId)
-  if (error) throw error
-}
-
-async function logDeliveryFailure(supabase, eventId, column, error) {
-  const { error: updateError } = await supabase
-    .from(EVENT_TABLE)
-    .update({
-      [column]: 'failed',
-      status: 'failed',
-      last_error: String(error?.message || error).slice(0, 500),
-      updated_at: new Date().toISOString(),
-    })
-    .eq('stripe_event_id', eventId)
-  if (updateError) {
-    console.error('[stripe-webhook] Could not record failure:', updateError.message)
-  }
-}
-
-async function sendOnce(supabase, eventId, column, send) {
-  if (!(await claimDelivery(supabase, eventId, column))) return
-  try {
-    await send()
-    await setDeliveryStatus(supabase, eventId, column, 'sent')
-  } catch (error) {
-    await logDeliveryFailure(supabase, eventId, column, error)
-    throw error
-  }
-}
-
 async function markEventSent(supabase, eventId) {
   const { error } = await supabase
     .from(EVENT_TABLE)
@@ -129,13 +78,13 @@ exports.handler = async function handler(event) {
   }
 
   try {
-    const [supabaseModule, orderModule, mailModule] = await Promise.all([
+    const [supabaseModule, orderModule, paidOrderModule, emailDeliveryModule] = await Promise.all([
       import('@supabase/supabase-js'),
       import('./order-number.mjs'),
-      import('./mail.mjs'),
+      import('./paid-order.mjs'),
+      import('./order-email-delivery.mjs'),
     ])
     const supabase = getSupabase(supabaseModule.createClient)
-    await ensureEvent(supabase, stripeEvent, eventSession)
 
     const session = await stripe.checkout.sessions.retrieve(eventSession.id, {
       expand: ['line_items'],
@@ -147,12 +96,12 @@ exports.handler = async function handler(event) {
       metadata: { ...session.metadata, order_number: orderNumber },
     }
 
-    // Les emails sont maintenant envoyés automatiquement par le trigger Supabase
-    // lors de l'insertion de la commande dans la base de données.
-    // On désactive les emails Stripe pour éviter les doublons.
-    console.log(`[stripe-webhook] Order ${orderNumber} processed. Emails will be sent by database trigger.`)
+    await paidOrderModule.persistPaidOrder(supabase, emailSession, orderNumber)
+    await ensureEvent(supabase, stripeEvent, eventSession)
+    await emailDeliveryModule.deliverOrderEmails(supabase, emailSession, lineItems)
 
     await markEventSent(supabase, stripeEvent.id)
+    console.log(`[stripe-webhook] Order ${orderNumber} saved and notifications processed.`)
     return json(200, { received: true })
   } catch (error) {
     console.error('[stripe-webhook]', stripeEvent.id, stripeEvent.type, error.message)

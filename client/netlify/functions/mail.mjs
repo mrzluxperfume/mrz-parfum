@@ -1,5 +1,7 @@
 import nodemailer from "nodemailer";
 
+const ORDER_NOTIFICATION_EMAIL = "mrz.lux.perfume@gmail.com";
+
 function requiredEnv(name) {
   const value = process.env[name]?.trim();
   if (!value) {
@@ -246,7 +248,7 @@ export async function sendNewsletterEmail({
 export async function sendOrderNotification({ session, lineItems }) {
   const orderReference = requiredOrderNumber(session)
   const { user, transport } = createTransport();
-  const to = process.env.MAIL_TO?.trim() || user;
+  const to = ORDER_NOTIFICATION_EMAIL;
   const metadata = session.metadata || {};
   const currency = String(session.currency || 'eur').toUpperCase();
   const formatMoney = (amount) =>
@@ -428,7 +430,7 @@ export async function sendAdminOrderConfirmation({ orderNumber, customer, items,
 
 export async function sendOrderNotificationFromDB({ orderNumber, customer, items, total, note }) {
   const { user, transport } = createTransport();
-  const to = process.env.MAIL_TO?.trim() || user;
+  const to = ORDER_NOTIFICATION_EMAIL;
 
   const formatMoney = (amount) =>
     new Intl.NumberFormat('fr-FR', {
