@@ -153,7 +153,12 @@ function scoreProduct(product, answers) {
 }
 
 export function recommendPerfumes(products, answers) {
-  const priced = products.filter((product) => typeof product.price === 'number')
+  const priced = products.filter(
+    (product) =>
+      product.collectionSlug !== 'body-splash' &&
+      product.categorySlug !== 'body-splash' &&
+      typeof product.price === 'number',
+  )
   let pool = priced.filter((product) => inBudget(product.price, answers.budget))
   if (pool.length < 3) pool = priced
 

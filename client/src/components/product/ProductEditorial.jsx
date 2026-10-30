@@ -98,12 +98,6 @@ export default function ProductEditorial({ product }) {
 
       {hasNotes && (
         <div className="relative mt-12 overflow-hidden py-8 md:mt-14 md:py-10">
-          <img
-            src="/product/floral-watermark.png"
-            alt=""
-            aria-hidden
-            className="pointer-events-none absolute left-1/2 top-1/2 w-[min(420px,95%)] -translate-x-1/2 -translate-y-[42%] opacity-30"
-          />
           <div className="relative text-center">
             <h2 className="font-display text-[2rem] font-normal leading-tight text-ink md:text-[2.4rem]">
               Pyramide Olfactive
