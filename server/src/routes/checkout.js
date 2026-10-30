@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { randomUUID } from "node:crypto";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -63,6 +64,7 @@ router.post("/", async (req, res) => {
     const phone = String(customer.phone || "").trim().slice(0, 40);
     const address = String(customer.address || "").trim().slice(0, 300);
     const note = String(req.body?.note || "").trim().slice(0, 300);
+    const orderNumber = `MRZ-${randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`;
 
     if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: "Nom et email sont requis." });
@@ -105,7 +107,15 @@ router.post("/", async (req, res) => {
       ...(discounts ? { discounts } : {}),
       success_url: `${clientUrl()}/cart?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${clientUrl()}/cart?payment=cancel`,
-      metadata: { name, phone, address, note, coupon: couponCode },
+      metadata: {
+        name,
+        phone,
+        address,
+        note,
+        coupon: couponCode,
+        order_number: orderNumber,
+        newsletter_opt_in: req.body?.newsletterOptIn === true ? "true" : "false",
+      },
       branding_settings: {
         display_name: "MRZ Perfume",
         button_color: "#23372d",
@@ -154,11 +164,14 @@ router.post("/confirm", async (req, res) => {
     return res.json({
       paid: true,
       sessionId: session.id,
+      orderNumber:
+        session.metadata?.order_number || `MRZ-${session.id.slice(-12).toUpperCase()}`,
       customer: {
         name: session.metadata?.name || session.customer_details?.name || "",
         email: session.customer_details?.email || session.customer_email || "",
         phone: session.metadata?.phone || "",
         address: session.metadata?.address || "",
+        newsletterOptIn: session.metadata?.newsletter_opt_in === "true",
       },
       note: session.metadata?.note || "",
       items,

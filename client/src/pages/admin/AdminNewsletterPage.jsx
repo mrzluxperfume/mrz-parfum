@@ -54,7 +54,13 @@ export default function AdminNewsletterPage() {
         if (cancelled) return
         const list = data.customers || []
         setCustomers(list)
-        setSelected(new Set(list.map((c) => c.email)))
+        setSelected(
+          new Set(
+            list
+              .filter((customer) => customer.newsletterConsent)
+              .map((customer) => customer.email),
+          ),
+        )
       } catch (err) {
         if (!cancelled) setError(err.message || 'Erreur de chargement.')
       } finally {
@@ -72,6 +78,9 @@ export default function AdminNewsletterPage() {
   }
 
   const toggle = (email) => {
+    if (!customers.find((customer) => customer.email === email)?.newsletterConsent) {
+      return
+    }
     setSelected((prev) => {
       const next = new Set(prev)
       if (next.has(email)) next.delete(email)
@@ -81,10 +90,11 @@ export default function AdminNewsletterPage() {
   }
 
   const toggleAll = () => {
+    const eligibleEmails = customers
+      .filter((customer) => customer.newsletterConsent)
+      .map((customer) => customer.email)
     setSelected((prev) =>
-      prev.size === customers.length
-        ? new Set()
-        : new Set(customers.map((c) => c.email)),
+      prev.size === eligibleEmails.length ? new Set() : new Set(eligibleEmails),
     )
   }
 
@@ -123,14 +133,14 @@ export default function AdminNewsletterPage() {
       <div>
         <h2 className="font-display text-3xl md:text-4xl">Newsletter</h2>
         <p className="mt-2 text-sm text-ink/65">
-          Liste des comptes clients et envoi d&apos;emails promotionnels.
+          Comptes et acheteurs. Les emails promotionnels sont réservés aux contacts inscrits.
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="border border-ink/10 bg-white p-5">
           <p className="text-[10px] uppercase tracking-[0.16em] text-muted">
-            Clients inscrits
+            Contacts collectés
           </p>
           <p className="mt-2 font-display text-4xl tabular-nums">
             {customers.length}
@@ -177,7 +187,7 @@ export default function AdminNewsletterPage() {
               onClick={toggleAll}
               className="text-[11px] uppercase tracking-[0.12em] text-ink/60 transition hover:text-ink"
             >
-              {selected.size === customers.length
+              {selected.size === customers.filter((customer) => customer.newsletterConsent).length
                 ? 'Tout désélectionner'
                 : 'Tout sélectionner'}
             </button>
@@ -199,8 +209,9 @@ export default function AdminNewsletterPage() {
                       <input
                         type="checkbox"
                         checked={checked}
+                        disabled={!customer.newsletterConsent}
                         onChange={() => toggle(customer.email)}
-                        className="mt-1"
+                        className="mt-1 disabled:cursor-not-allowed disabled:opacity-40"
                       />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm text-ink">
@@ -211,11 +222,17 @@ export default function AdminNewsletterPage() {
                         </span>
                       </span>
                       <span className="shrink-0 text-[10px] uppercase tracking-[0.1em] text-muted">
-                        {customer.createdAt
-                          ? new Date(customer.createdAt).toLocaleDateString(
-                              'fr-FR',
-                            )
-                          : '—'}
+                        <span className="block">{customer.source}</span>
+                        <span className="mt-1 block">
+                          {customer.newsletterConsent ? 'Inscrit' : 'Non inscrit'}
+                        </span>
+                        <span className="mt-1 block">
+                          {customer.createdAt
+                            ? new Date(customer.createdAt).toLocaleDateString(
+                                'fr-FR',
+                              )
+                            : '—'}
+                        </span>
                       </span>
                     </label>
                   </li>

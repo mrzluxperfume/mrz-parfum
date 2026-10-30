@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { json, preflight, readJson } from "./http.mjs";
 import { clientUrl, mrzLogoFile, stripeClient } from "./stripe-session.mjs";
 import { discountFromCoupon, findPromotion } from "./coupon-stripe.mjs";
@@ -21,6 +22,7 @@ export async function handler(event) {
     const phone = String(customer.phone || "").trim().slice(0, 40);
     const address = String(customer.address || "").trim().slice(0, 300);
     const note = String(body.note || "").trim().slice(0, 300);
+    const orderNumber = `MRZ-${randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`;
 
     if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return json(400, { error: "Nom et email sont requis." });
@@ -63,7 +65,15 @@ export async function handler(event) {
       ...(discounts ? { discounts } : {}),
       success_url: `${clientUrl()}/cart?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${clientUrl()}/cart?payment=cancel`,
-      metadata: { name, phone, address, note, coupon: couponCode },
+      metadata: {
+        name,
+        phone,
+        address,
+        note,
+        coupon: couponCode,
+        order_number: orderNumber,
+        newsletter_opt_in: body.newsletterOptIn === true ? "true" : "false",
+      },
       branding_settings: {
         display_name: "MRZ Perfume",
         button_color: "#23372d",

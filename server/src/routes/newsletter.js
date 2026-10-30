@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { createClient } from "@supabase/supabase-js";
 import { sendNewsletterEmail } from "../../../client/netlify/functions/mail.mjs";
+import { listNewsletterAudience } from "../../../client/netlify/functions/newsletter-audience.mjs";
 
 const router = Router();
 
@@ -43,23 +44,12 @@ router.get("/", async (_req, res) => {
     });
   }
 
-  const { data, error } = await supabase
-    .from("customers")
-    .select("email, first_name, last_name, created_at")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    return res.status(500).json({ error: error.message });
+  try {
+    const customers = await listNewsletterAudience(supabase);
+    return res.json({ ok: true, customers, count: customers.length });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Lecture clients impossible." });
   }
-
-  const customers = (data || []).map((row) => ({
-    email: row.email,
-    firstName: row.first_name || "",
-    lastName: row.last_name || "",
-    createdAt: row.created_at,
-  }));
-
-  return res.json({ ok: true, customers, count: customers.length });
 });
 
 router.post("/", async (req, res) => {
@@ -88,21 +78,17 @@ router.post("/", async (req, res) => {
     });
   }
 
-  let recipients = [];
-  if (emails.length) {
-    const { data, error } = await supabase
-      .from("customers")
-      .select("email, first_name")
-      .in("email", emails);
-    if (error) return res.status(500).json({ error: error.message });
-    recipients = data || [];
-  } else {
-    const { data, error } = await supabase
-      .from("customers")
-      .select("email, first_name");
-    if (error) return res.status(500).json({ error: error.message });
-    recipients = data || [];
+  let audience;
+  try {
+    audience = await listNewsletterAudience(supabase);
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "Lecture destinataires impossible." });
   }
+  const selectedEmails = new Set(emails);
+  const recipients = audience
+    .filter((contact) => contact.newsletterConsent)
+    .filter((contact) => !emails.length || selectedEmails.has(contact.email))
+    .map((contact) => ({ email: contact.email, first_name: contact.firstName }));
 
   if (!recipients.length) {
     return res.status(400).json({ error: "Aucun destinataire sélectionné." });

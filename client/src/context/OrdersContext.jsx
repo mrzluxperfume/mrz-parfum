@@ -70,7 +70,7 @@ export function OrdersProvider({ children }) {
   }, [])
 
   const placeOrder = useCallback(
-    async ({ customer, items, note = '' }) => {
+    async ({ id, customer, items, note = '' }) => {
       const lineItems = items.map((item) => ({
         productId: item.id,
         name: item.name,
@@ -82,7 +82,7 @@ export function OrdersProvider({ children }) {
       }))
       const total = lineItems.reduce((sum, l) => sum + l.lineTotal, 0)
       const order = {
-        id: `MRZ-${Date.now()}`,
+        id: id || `MRZ-${Date.now()}`,
         createdAt: new Date().toISOString(),
         status: 'new',
         customer: {
@@ -90,6 +90,7 @@ export function OrdersProvider({ children }) {
           email: customer.email?.trim() || '',
           phone: customer.phone?.trim() || '',
           address: customer.address?.trim() || '',
+          newsletterOptIn: Boolean(customer.newsletterOptIn),
         },
         note: note?.trim() || '',
         items: lineItems,

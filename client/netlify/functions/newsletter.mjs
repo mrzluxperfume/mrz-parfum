@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { json, preflight, readJson } from "./http.mjs";
 import { sendNewsletterEmail } from "./mail.mjs";
+import { listNewsletterAudience } from "./newsletter-audience.mjs";
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -46,22 +47,7 @@ export async function handler(event) {
 
   try {
     if (event.httpMethod === "GET") {
-      const { data, error } = await supabase
-        .from("customers")
-        .select("email, first_name, last_name, created_at")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        return json(500, { error: error.message || "Lecture clients impossible." });
-      }
-
-      const customers = (data || []).map((row) => ({
-        email: row.email,
-        firstName: row.first_name || "",
-        lastName: row.last_name || "",
-        createdAt: row.created_at,
-      }));
-
+      const customers = await listNewsletterAudience(supabase);
       return json(200, { ok: true, customers, count: customers.length });
     }
 
@@ -84,25 +70,12 @@ export async function handler(event) {
         });
       }
 
-      let recipients = [];
-      if (emails.length) {
-        const { data, error } = await supabase
-          .from("customers")
-          .select("email, first_name")
-          .in("email", emails);
-        if (error) {
-          return json(500, { error: error.message || "Lecture destinataires impossible." });
-        }
-        recipients = data || [];
-      } else {
-        const { data, error } = await supabase
-          .from("customers")
-          .select("email, first_name");
-        if (error) {
-          return json(500, { error: error.message || "Lecture destinataires impossible." });
-        }
-        recipients = data || [];
-      }
+      const audience = await listNewsletterAudience(supabase);
+      const selectedEmails = new Set(emails);
+      const recipients = audience
+        .filter((contact) => contact.newsletterConsent)
+        .filter((contact) => !emails.length || selectedEmails.has(contact.email))
+        .map((contact) => ({ email: contact.email, first_name: contact.firstName }));
 
       if (!recipients.length) {
         return json(400, { error: "Aucun destinataire sélectionné." });

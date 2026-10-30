@@ -27,6 +27,7 @@ export default function CartPage() {
   const [couponMessage, setCouponMessage] = useState('')
   const [couponBusy, setCouponBusy] = useState(false)
   const [offer, setOffer] = useState(null)
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false)
   const [status, setStatus] = useState('idle')
   const [orderId, setOrderId] = useState(null)
   const [errorMessage, setErrorMessage] = useState('')
@@ -47,23 +48,27 @@ export default function CartPage() {
     if (payment !== 'success' || !sessionId) return
 
     const flag = `mrz_paid_${sessionId}`
-    if (sessionStorage.getItem(flag)) {
-      setOrderId(sessionStorage.getItem(flag))
+    const savedOrderId = sessionStorage.getItem(flag)
+    if (savedOrderId && savedOrderId !== 'undefined') {
+      setOrderId(savedOrderId)
       setStatus('success')
       return
     }
+    sessionStorage.removeItem(flag)
 
     let cancelled = false
     setStatus('paying')
     api
       .post('/checkout/confirm', { sessionId })
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         if (cancelled) return
-        const order = placeOrder({
+        const order = await placeOrder({
+          id: data.orderNumber,
           customer: data.customer,
           items: data.items,
           note: data.note,
         })
+        if (cancelled) return
         sessionStorage.setItem(flag, order.id)
         clearCart()
         setOrderId(order.id)
@@ -165,6 +170,7 @@ export default function CartPage() {
         items,
         note,
         couponCode: coupon?.code || '',
+        newsletterOptIn,
       })
       window.location.assign(data.url)
     } catch (err) {
@@ -402,6 +408,19 @@ export default function CartPage() {
                     onChange={(e) => setNote(e.target.value)}
                   />
                 </Field>
+
+                <label className="flex items-start gap-3 text-xs leading-relaxed text-ink/65">
+                  <input
+                    type="checkbox"
+                    checked={newsletterOptIn}
+                    onChange={(e) => setNewsletterOptIn(e.target.checked)}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    Je souhaite recevoir par email les nouveautés et offres de
+                    MRZ Perfume. Je pourrai me désinscrire à tout moment.
+                  </span>
+                </label>
 
                 {status === 'error' && (
                   <p className="text-sm text-red-700">{errorMessage}</p>

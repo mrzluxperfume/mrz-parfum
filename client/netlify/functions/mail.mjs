@@ -264,7 +264,7 @@ export async function sendOrderNotification({ session, lineItems }) {
   const customerName = metadata.name || session.customer_details?.name || 'Non renseigné';
   const customerEmail = session.customer_details?.email || session.customer_email || 'Non renseigné';
   const total = formatMoney(session.amount_total);
-  const orderReference = session.id;
+  const orderReference = metadata.order_number || session.id;
 
   try {
     await transport.sendMail({
@@ -321,7 +321,7 @@ export async function sendCustomerOrderConfirmation({ session, lineItems }) {
   const total = formatMoney(session.amount_total);
   const address = metadata.address || '';
   const phone = metadata.phone || '';
-  const reference = session.id;
+  const reference = metadata.order_number || session.id;
 
   try {
     await transport.sendMail({

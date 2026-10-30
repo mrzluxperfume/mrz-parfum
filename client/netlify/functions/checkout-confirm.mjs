@@ -36,11 +36,14 @@ export async function handler(event) {
     return json(200, {
       paid: true,
       sessionId: session.id,
+      orderNumber:
+        session.metadata?.order_number || `MRZ-${session.id.slice(-12).toUpperCase()}`,
       customer: {
         name: session.metadata?.name || session.customer_details?.name || "",
         email: session.customer_details?.email || session.customer_email || "",
         phone: session.metadata?.phone || "",
         address: session.metadata?.address || "",
+        newsletterOptIn: session.metadata?.newsletter_opt_in === "true",
       },
       note: session.metadata?.note || "",
       items,
