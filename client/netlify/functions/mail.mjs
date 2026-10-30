@@ -361,3 +361,180 @@ export async function sendCustomerOrderConfirmation({ session, lineItems }) {
     throw mapSmtpError(err);
   }
 }
+
+export async function sendAdminOrderConfirmation({ orderNumber, customer, items, total, note }) {
+  const { user, transport } = createTransport();
+  const to = String(customer?.email || '').trim();
+  
+  if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+    throw new Error('Email client invalide');
+  }
+  if (!/^MR\d{5}$/.test(orderNumber)) {
+    throw new Error('Numéro de commande invalide');
+  }
+
+  const formatMoney = (amount) =>
+    new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(Number(amount) || 0);
+
+  const rows = (items || []).map((item) => {
+    const name = item.name || 'Article MRZ Perfume';
+    const quantity = Number(item.quantity) || 1;
+    const lineTotal = formatMoney(item.lineTotal || item.price * quantity);
+    return {
+      text: `${quantity} × ${name} ${item.volume ? `(${item.volume})` : ''} — ${lineTotal}`,
+      html: `<tr><td style="padding:10px 8px;border-bottom:1px solid #eee;">${escapeHtml(name)}${item.volume ? ` <span style="color:#888">(${escapeHtml(item.volume)})</span>` : ''}</td><td style="padding:10px 8px;border-bottom:1px solid #eee;text-align:center;">${quantity}</td><td style="padding:10px 8px;border-bottom:1px solid #eee;text-align:right;">${escapeHtml(lineTotal)}</td></tr>`,
+    };
+  });
+
+  const customerName = customer?.name || 'Client';
+  const totalFormatted = formatMoney(total);
+  const address = customer?.address || '';
+  const phone = customer?.phone || '';
+
+  try {
+    await transport.sendMail({
+      from: `"MRZ Perfume" <${user}>`,
+      to,
+      replyTo: user,
+      subject: `Votre commande MRZ est confirmée — ${orderNumber}`.slice(0, 180),
+      text: [
+        `Bonjour ${customerName},`,
+        '',
+        'Votre commande a été confirmée par notre équipe et est en cours de préparation.',
+        `Numéro de commande : ${orderNumber}`,
+        '',
+        'Détail de votre commande :',
+        ...rows.map((row) => row.text),
+        '',
+        `Total : ${totalFormatted}`,
+        address ? `Adresse de livraison : ${address}` : '',
+        phone ? `Téléphone : ${phone}` : '',
+        note ? `Votre note : ${note}` : '',
+        '',
+        'Nous vous informerons dès l\'expédition de votre colis.',
+        '',
+        'Merci pour votre confiance,',
+        'L\'équipe MRZ Perfume',
+      ].filter(Boolean).join('\n'),
+      html: `<!doctype html><html lang="fr"><body style="margin:0;padding:24px;background:#f7f5f2;font-family:Arial,sans-serif;color:#1a1a1a;line-height:1.6"><main style="max-width:620px;margin:0 auto;padding:32px;background:#fff"><p>Bonjour ${escapeHtml(customerName)},</p><h1 style="font-family:Georgia,serif;font-weight:normal">Commande confirmée</h1><p>Votre commande a été confirmée par notre équipe et est en cours de préparation.</p><p><strong>Numéro de commande :</strong> ${escapeHtml(orderNumber)}</p><h2 style="font-size:16px">Détail de votre commande</h2><table style="width:100%;border-collapse:collapse"><thead><tr><th style="padding:8px;text-align:left">Article</th><th style="padding:8px">Qté</th><th style="padding:8px;text-align:right">Total</th></tr></thead><tbody>${rows.map((row) => row.html).join('')}</tbody></table><p style="text-align:right;font-size:18px"><strong>Total : ${escapeHtml(totalFormatted)}</strong></p>${address ? `<p><strong>Adresse de livraison :</strong><br />${escapeHtml(address)}</p>` : ''}${phone ? `<p><strong>Téléphone :</strong> ${escapeHtml(phone)}</p>` : ''}${note ? `<p><strong>Votre note :</strong> ${escapeHtml(note)}</p>` : ''}<p>Nous vous informerons dès l'expédition de votre colis.</p><p>Merci pour votre confiance,<br />L'équipe MRZ Perfume</p></main></body></html>`,
+    });
+  } catch (err) {
+    throw mapSmtpError(err);
+  }
+}
+
+export async function sendOrderNotificationFromDB({ orderNumber, customer, items, total, note }) {
+  const { user, transport } = createTransport();
+  const to = process.env.MAIL_TO?.trim() || user;
+
+  const formatMoney = (amount) =>
+    new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(Number(amount) || 0);
+
+  const rows = (items || []).map((item) => {
+    const name = item.name || 'Article MRZ Perfume';
+    const quantity = Number(item.quantity) || 1;
+    const lineTotal = formatMoney(item.lineTotal || item.unitPrice * quantity || 0);
+    return {
+      text: `${quantity} × ${name} ${item.volume ? `(${item.volume})` : ''} — ${lineTotal}`,
+      html: `<tr><td style="padding:8px;border-bottom:1px solid #eee;">${escapeHtml(name)}${item.volume ? ` <span style="color:#888">(${escapeHtml(item.volume)})</span>` : ''}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${quantity}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">${escapeHtml(lineTotal)}</td></tr>`,
+    };
+  });
+
+  const customerName = customer?.name || 'Non renseigné';
+  const customerEmail = customer?.email || 'Non renseigné';
+  const totalFormatted = formatMoney(total);
+
+  try {
+    await transport.sendMail({
+      from: `"MRZ Perfume" <${user}>`,
+      to,
+      replyTo: customerEmail !== 'Non renseigné' ? customerEmail : undefined,
+      subject: `Nouvelle commande — ${orderNumber}`.slice(0, 180),
+      text: [
+        'Une nouvelle commande MRZ Perfume a été enregistrée.',
+        '',
+        `Numéro : ${orderNumber}`,
+        `Client : ${customerName}`,
+        `Email : ${customerEmail}`,
+        `Téléphone : ${customer?.phone || 'Non renseigné'}`,
+        `Adresse : ${customer?.address || 'Non renseignée'}`,
+        '',
+        'Articles :',
+        ...rows.map((row) => row.text),
+        '',
+        `Total : ${totalFormatted}`,
+        `Note : ${note || 'Aucune'}`,
+      ].filter(Boolean).join('\n'),
+      html: `<!doctype html><html lang="fr"><body style="font-family:Arial,sans-serif;color:#1a1a1a;line-height:1.5"><h1>Nouvelle commande</h1><p>Une nouvelle commande MRZ Perfume a été enregistrée.</p><p><strong>Numéro :</strong> ${escapeHtml(orderNumber)}<br><strong>Client :</strong> ${escapeHtml(customerName)}<br><strong>Email :</strong> ${escapeHtml(customerEmail)}<br><strong>Téléphone :</strong> ${escapeHtml(customer?.phone || 'Non renseigné')}<br><strong>Adresse :</strong> ${escapeHtml(customer?.address || 'Non renseignée')}</p><table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:8px">Article</th><th style="padding:8px">Qté</th><th style="text-align:right;padding:8px">Total</th></tr></thead><tbody>${rows.map((row) => row.html).join('')}</tbody></table><p><strong>Total : ${escapeHtml(totalFormatted)}</strong><br>Note : ${escapeHtml(note || 'Aucune')}</p></body></html>`,
+    });
+  } catch (err) {
+    throw mapSmtpError(err);
+  }
+}
+
+export async function sendCustomerOrderConfirmationFromDB({ orderNumber, customer, items, total, note }) {
+  const { user, transport } = createTransport();
+  const to = String(customer?.email || '').trim();
+  
+  if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+    throw new Error('Email client invalide');
+  }
+
+  const formatMoney = (amount) =>
+    new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(Number(amount) || 0);
+
+  const rows = (items || []).map((item) => {
+    const name = item.name || 'Article MRZ Perfume';
+    const quantity = Number(item.quantity) || 1;
+    const lineTotal = formatMoney(item.lineTotal || item.unitPrice * quantity || 0);
+    return {
+      text: `${quantity} × ${name} ${item.volume ? `(${item.volume})` : ''} — ${lineTotal}`,
+      html: `<tr><td style="padding:10px 8px;border-bottom:1px solid #eee;">${escapeHtml(name)}${item.volume ? ` <span style="color:#888">(${escapeHtml(item.volume)})</span>` : ''}</td><td style="padding:10px 8px;border-bottom:1px solid #eee;text-align:center;">${quantity}</td><td style="padding:10px 8px;border-bottom:1px solid #eee;text-align:right;">${escapeHtml(lineTotal)}</td></tr>`,
+    };
+  });
+
+  const customerName = customer?.name || 'Bonjour';
+  const totalFormatted = formatMoney(total);
+  const address = customer?.address || '';
+  const phone = customer?.phone || '';
+
+  try {
+    await transport.sendMail({
+      from: `"MRZ Perfume" <${user}>`,
+      to,
+      replyTo: user,
+      subject: `Confirmation de votre commande MRZ — ${orderNumber}`.slice(0, 180),
+      text: [
+        `Bonjour ${customerName},`,
+        '',
+        'Nous vous confirmons que votre commande a été enregistrée avec succès.',
+        `Numéro de commande : ${orderNumber}`,
+        '',
+        'Détail de votre commande :',
+        ...rows.map((row) => row.text),
+        '',
+        `Total : ${totalFormatted}`,
+        address ? `Adresse de livraison : ${address}` : '',
+        phone ? `Téléphone : ${phone}` : '',
+        note ? `Votre note : ${note}` : '',
+        '',
+        'Nous préparons votre commande et vous tiendrons informé de son expédition.',
+        '',
+        'Merci pour votre confiance,',
+        'MRZ Perfume',
+      ].filter(Boolean).join('\n'),
+      html: `<!doctype html><html lang="fr"><body style="margin:0;padding:24px;background:#f7f5f2;font-family:Arial,sans-serif;color:#1a1a1a;line-height:1.6"><main style="max-width:620px;margin:0 auto;padding:32px;background:#fff"><p>Bonjour ${escapeHtml(customerName)},</p><h1 style="font-family:Georgia,serif;font-weight:normal">Merci pour votre commande</h1><p>Nous vous confirmons que votre commande a été enregistrée avec succès.</p><p><strong>Numéro de commande :</strong> ${escapeHtml(orderNumber)}</p><h2 style="font-size:16px">Détail de votre commande</h2><table style="width:100%;border-collapse:collapse"><thead><tr><th style="padding:8px;text-align:left">Article</th><th style="padding:8px">Qté</th><th style="padding:8px;text-align:right">Total</th></tr></thead><tbody>${rows.map((row) => row.html).join('')}</tbody></table><p style="text-align:right;font-size:18px"><strong>Total : ${escapeHtml(totalFormatted)}</strong></p>${address ? `<p><strong>Adresse de livraison :</strong><br />${escapeHtml(address)}</p>` : ''}${phone ? `<p><strong>Téléphone :</strong> ${escapeHtml(phone)}</p>` : ''}${note ? `<p><strong>Votre note :</strong> ${escapeHtml(note)}</p>` : ''}<p>Nous préparons votre commande et vous tiendrons informé de son expédition.</p><p>Merci pour votre confiance,<br />MRZ Perfume</p></main></body></html>`,
+    });
+  } catch (err) {
+    throw mapSmtpError(err);
+  }
+}

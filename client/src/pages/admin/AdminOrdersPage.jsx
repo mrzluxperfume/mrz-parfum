@@ -211,6 +211,11 @@ export default function AdminOrdersPage() {
                   </select>
                 </label>
 
+                <div className="border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800">
+                  <p className="font-medium mb-1">📧 Emails automatiques</p>
+                  <p>Les emails sont envoyés automatiquement lors de la création de la commande (propriétaire + client).</p>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => {

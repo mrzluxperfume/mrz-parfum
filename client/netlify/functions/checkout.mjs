@@ -1,8 +1,19 @@
+import { createClient } from "@supabase/supabase-js";
 import { json, preflight, readJson } from "./http.mjs";
 import { clientUrl, mrzLogoFile, stripeClient } from "./stripe-session.mjs";
 import { discountFromCoupon, findPromotion } from "./coupon-stripe.mjs";
 import { checkoutLines } from "./offer-logic.mjs";
 import { activeOffers, readOffers } from "./offer-store.mjs";
+import { reserveOrderNumber } from "./order-number.mjs";
+
+function getSupabase() {
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Configuration Supabase manquante");
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
 
 export async function handler(event) {
   const early = preflight(event);
@@ -80,6 +91,25 @@ export async function handler(event) {
         ...(logo ? { logo: { type: "file", file: logo } } : {}),
       },
     });
+
+    // Reserve order number with the actual Stripe session ID
+    try {
+      const supabase = getSupabase();
+      const orderNumber = await reserveOrderNumber(supabase, session.id);
+      
+      // Update session metadata with order number
+      await stripe.checkout.sessions.update(session.id, {
+        metadata: {
+          ...session.metadata,
+          order_number: orderNumber,
+        },
+      });
+      
+      console.log(`[checkout] Order number ${orderNumber} reserved for session ${session.id}`);
+    } catch (orderErr) {
+      console.error("[checkout] Failed to reserve order number:", orderErr.message);
+      // Continue anyway - the webhook will handle it as fallback
+    }
 
     return json(200, { url: session.url });
   } catch (err) {

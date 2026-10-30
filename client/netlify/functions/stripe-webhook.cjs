@@ -147,18 +147,10 @@ exports.handler = async function handler(event) {
       metadata: { ...session.metadata, order_number: orderNumber },
     }
 
-    const emailErrors = []
-    for (const [column, send] of [
-      ['merchant_email_status', () => mailModule.sendOrderNotification({ session: emailSession, lineItems })],
-      ['customer_email_status', () => mailModule.sendCustomerOrderConfirmation({ session: emailSession, lineItems })],
-    ]) {
-      try {
-        await sendOnce(supabase, stripeEvent.id, column, send)
-      } catch (error) {
-        emailErrors.push(`${column}: ${error.message || error}`)
-      }
-    }
-    if (emailErrors.length) throw new Error(emailErrors.join('; '))
+    // Les emails sont maintenant envoyés automatiquement par le trigger Supabase
+    // lors de l'insertion de la commande dans la base de données.
+    // On désactive les emails Stripe pour éviter les doublons.
+    console.log(`[stripe-webhook] Order ${orderNumber} processed. Emails will be sent by database trigger.`)
 
     await markEventSent(supabase, stripeEvent.id)
     return json(200, { received: true })
