@@ -103,6 +103,7 @@ router.post("/", async (req, res) => {
       mode: "payment",
       adaptive_pricing: { enabled: false },
       customer_email: email,
+      payment_intent_data: { receipt_email: email },
       line_items: lineItems,
       ...(discounts ? { discounts } : {}),
       success_url: `${clientUrl()}/cart?payment=success&session_id={CHECKOUT_SESSION_ID}`,

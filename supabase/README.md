@@ -58,7 +58,9 @@ Copiez son secret de signature (`whsec_...`) dans la variable Netlify
 `STRIPE_WEBHOOK_SECRET`. Configurez aussi les variables SMTP ci-dessus pour
 que le vendeur et le client reçoivent chacun leur email après chaque paiement
 confirmé. L’email client contient la référence, les articles, les quantités et
-le total payé.
+le total payé. Checkout demande aussi un reçu de paiement Stripe à l’adresse du
+client via `payment_intent_data.receipt_email`; en mode test, Stripe n’envoie
+pas de reçus automatiques.
 
 Créez un endpoint distinct en mode test si vous souhaitez tester les paiements
 Stripe en mode test. Le tableau de bord Stripe conserve aussi chaque paiement
