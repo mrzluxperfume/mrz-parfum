@@ -15,6 +15,9 @@
 Si le projet existait déjà avec l’ancienne policy ouverte sur `customers` :
 collez aussi `supabase/secure-customers.sql` puis **Run**.
 
+Pour activer les emails de commande payée, exécutez aussi
+`supabase/stripe-order-email-notifications.sql` dans le SQL Editor.
+
 ## 3. Variables d’environnement
 
 ### En local — `server/.env`
@@ -37,19 +40,36 @@ Ajoutez :
 - `VITE_SUPABASE_ANON_KEY`
 - `SUPABASE_URL` (même URL)
 - `SUPABASE_SERVICE_ROLE_KEY` (secret — pour `/api/auth`)
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET` (secret de signature de l’endpoint ci-dessous)
+- `SMTP_USER` / `SMTP_PASS`
+- `MAIL_TO` (email qui reçoit les nouvelles commandes; sinon `SMTP_USER`)
 - `VITE_ADMIN_USER` / `VITE_ADMIN_PASS` (admin)
 
-## 4. Importer les produits
+## 4. Emails et notifications Stripe
+
+Dans Stripe, ajoutez un endpoint webhook vers
+`https://mrz-perfume.fr/api/stripe/webhook` et abonnez-le aux événements
+`checkout.session.completed` et `checkout.session.async_payment_succeeded`.
+Copiez son secret de signature (`whsec_...`) dans la variable Netlify
+`STRIPE_WEBHOOK_SECRET`. Configurez aussi les variables SMTP ci-dessus pour
+recevoir un email après chaque paiement confirmé.
+
+Créez un endpoint distinct en mode test si vous souhaitez tester les paiements
+Stripe en mode test. Le tableau de bord Stripe conserve aussi chaque paiement
+réussi dans sa liste des paiements.
+
+## 5. Importer les produits
 Depuis `mrz-perfume/` :
 ```
 npm run seed
 ```
 
-## 5. Sécurité comptes
+## 6. Sécurité comptes
 - Mots de passe hashés (PBKDF2), jamais stockés en clair.
 - Auth client via `/api/auth` (Netlify Function / Express) avec la clé service_role.
 - Table `customers` non lisible avec la clé publique.
 
-## 6. Vérifier
+## 7. Vérifier
 Redémarrez `npm run dev`.
 Sans variables Supabase, le site utilise un stockage local hashé.

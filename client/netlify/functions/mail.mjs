@@ -234,3 +234,64 @@ export async function sendNewsletterEmail({
     throw mapSmtpError(err);
   }
 }
+
+export async function sendOrderNotification({ session, lineItems }) {
+  const { user, transport } = createTransport();
+  const to = process.env.MAIL_TO?.trim() || user;
+  const metadata = session.metadata || {};
+  const currency = String(session.currency || 'eur').toUpperCase();
+  const formatMoney = (amount) =>
+    new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency,
+    }).format((Number(amount) || 0) / 100);
+  const paymentIntent =
+    typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : session.payment_intent?.id;
+  const paymentUrl = paymentIntent
+    ? `https://dashboard.stripe.com/${session.livemode ? '' : 'test/'}payments/${encodeURIComponent(paymentIntent)}`
+    : '';
+  const rows = lineItems.map((item) => {
+    const name = item.description || 'Article MRZ Perfume';
+    const quantity = Number(item.quantity) || 1;
+    const total = formatMoney(item.amount_total);
+    return {
+      text: `${quantity} × ${name} — ${total}`,
+      html: `<tr><td style="padding:8px;border-bottom:1px solid #eee;">${escapeHtml(name)}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${quantity}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">${escapeHtml(total)}</td></tr>`,
+    };
+  });
+  const customerName = metadata.name || session.customer_details?.name || 'Non renseigné';
+  const customerEmail = session.customer_details?.email || session.customer_email || 'Non renseigné';
+  const total = formatMoney(session.amount_total);
+  const orderReference = session.id;
+
+  try {
+    await transport.sendMail({
+      from: `"MRZ Perfume" <${user}>`,
+      to,
+      replyTo: customerEmail !== 'Non renseigné' ? customerEmail : undefined,
+      subject: `Commande payée — ${orderReference}`.slice(0, 180),
+      text: [
+        'Une nouvelle commande MRZ Perfume a été payée.',
+        '',
+        `Référence Stripe : ${orderReference}`,
+        `Client : ${customerName}`,
+        `Email : ${customerEmail}`,
+        `Téléphone : ${metadata.phone || 'Non renseigné'}`,
+        `Adresse : ${metadata.address || 'Non renseignée'}`,
+        '',
+        'Articles :',
+        ...rows.map((row) => row.text),
+        '',
+        `Total payé : ${total}`,
+        `Coupon : ${metadata.coupon || 'Aucun'}`,
+        `Note : ${metadata.note || 'Aucune'}`,
+        paymentUrl ? `Voir le paiement Stripe : ${paymentUrl}` : '',
+      ].filter(Boolean).join('\n'),
+      html: `<!doctype html><html lang="fr"><body style="font-family:Arial,sans-serif;color:#1a1a1a;line-height:1.5"><h1>Commande payée</h1><p>Une nouvelle commande MRZ Perfume a été confirmée.</p><p><strong>Référence Stripe :</strong> ${escapeHtml(orderReference)}<br><strong>Client :</strong> ${escapeHtml(customerName)}<br><strong>Email :</strong> ${escapeHtml(customerEmail)}<br><strong>Téléphone :</strong> ${escapeHtml(metadata.phone || 'Non renseigné')}<br><strong>Adresse :</strong> ${escapeHtml(metadata.address || 'Non renseignée')}</p><table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:8px">Article</th><th style="padding:8px">Qté</th><th style="text-align:right;padding:8px">Total</th></tr></thead><tbody>${rows.map((row) => row.html).join('')}</tbody></table><p><strong>Total payé : ${escapeHtml(total)}</strong><br>Coupon : ${escapeHtml(metadata.coupon || 'Aucun')}<br>Note : ${escapeHtml(metadata.note || 'Aucune')}</p>${paymentUrl ? `<p><a href="${paymentUrl}">Voir le paiement dans Stripe</a></p>` : ''}</body></html>`,
+    });
+  } catch (err) {
+    throw mapSmtpError(err);
+  }
+}
