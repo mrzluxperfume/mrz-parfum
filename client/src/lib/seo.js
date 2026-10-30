@@ -1,4 +1,4 @@
-export const SITE = 'https://www.mrz-perfume.fr'
+export const SITE = 'https://mrz-perfume.fr'
 export const SITE_NAME = 'MRZ Perfume'
 export const DEFAULT_TITLE =
   'MRZ Perfume Parfums de luxe aux fragrances uniques'

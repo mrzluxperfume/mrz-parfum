@@ -1,52 +1,14 @@
 import { writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { collections } from '../src/data/collections.js'
-import { products } from '../src/data/products.js'
+import { SITE, sitemapPaths } from '../src/lib/sitemap-routes.js'
 
-const site = 'https://www.mrz-perfume.fr'
-const HIDDEN_COLLECTION = 'parfum-rp-paris'
-
-const pages = [
-  '/',
-  '/shop',
-  '/collections',
-  '/trouver-mon-parfum',
-  '/about',
-  '/about/histoire',
-  '/about/temoignages',
-  '/blog',
-  '/blog/concentrations',
-  '/contact',
-  '/faq',
-  '/terms',
-  '/privacy',
-]
-
-for (const collection of collections) {
-  if (collection.slug === HIDDEN_COLLECTION) continue
-  pages.push(`/collection/${collection.slug}`)
-  pages.push(`/category/${collection.slug}`)
-}
-
-const slugs = new Set()
-for (const product of products) {
-  if (
-    !product.slug ||
-    slugs.has(product.slug) ||
-    product.collectionSlug === HIDDEN_COLLECTION ||
-    product.categorySlug === HIDDEN_COLLECTION
-  ) {
-    continue
-  }
-  slugs.add(product.slug)
-  pages.push(`/product/${product.slug}`)
-}
+const pages = sitemapPaths()
 
 const urls = pages
   .map(
     (path) => `  <url>
-    <loc>${site}${path}</loc>
+    <loc>${SITE}${path}</loc>
   </url>`,
   )
   .join('\n')

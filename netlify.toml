@@ -45,6 +45,12 @@
 
 # Clean sitemap endpoint (avoids poisoned /sitemap.xml HTML cache)
 [[redirects]]
+  from = "https://www.mrz-perfume.fr/*"
+  to = "https://mrz-perfume.fr/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
   from = "/sitemap.xml"
   to = "/.netlify/functions/sitemap"
   status = 200

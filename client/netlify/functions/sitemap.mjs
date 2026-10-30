@@ -1,46 +1,7 @@
-import { products } from "../../src/data/products.js";
-import { collections } from "../../src/data/collections.js";
-
-const SITE = "https://www.mrz-perfume.fr";
-const HIDDEN = "parfum-rp-paris";
+import { SITE, sitemapPaths } from "../../src/lib/sitemap-routes.js";
 
 function buildSitemap() {
-  const paths = [
-    "/",
-    "/shop",
-    "/collections",
-    "/trouver-mon-parfum",
-    "/about",
-    "/about/histoire",
-    "/about/temoignages",
-    "/blog",
-    "/blog/concentrations",
-    "/contact",
-    "/faq",
-    "/terms",
-    "/privacy",
-  ];
-
-  for (const collection of collections) {
-    if (collection.slug === HIDDEN) continue;
-    paths.push(`/collection/${collection.slug}`);
-    paths.push(`/category/${collection.slug}`);
-  }
-
-  const seen = new Set();
-  for (const product of products) {
-    if (
-      !product.slug ||
-      seen.has(product.slug) ||
-      product.collectionSlug === HIDDEN ||
-      product.categorySlug === HIDDEN
-    ) {
-      continue;
-    }
-    seen.add(product.slug);
-    paths.push(`/product/${product.slug}`);
-  }
-
+  const paths = sitemapPaths();
   const urls = paths
     .map(
       (path) => `  <url>
