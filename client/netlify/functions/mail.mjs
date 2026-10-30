@@ -1,5 +1,4 @@
 import nodemailer from "nodemailer";
-import { getOrderNumber } from "./order-number.mjs";
 
 function requiredEnv(name) {
   const value = process.env[name]?.trim();
@@ -77,6 +76,14 @@ function escapeHtml(value) {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
+}
+
+function requiredOrderNumber(session) {
+  const orderNumber = String(session?.metadata?.order_number || '').trim()
+  if (!/^MR\d{5}$/.test(orderNumber)) {
+    throw new Error('Numéro de commande manquant ou invalide')
+  }
+  return orderNumber
 }
 
 function formatMessageHtml(message) {
@@ -237,6 +244,7 @@ export async function sendNewsletterEmail({
 }
 
 export async function sendOrderNotification({ session, lineItems }) {
+  const orderReference = requiredOrderNumber(session)
   const { user, transport } = createTransport();
   const to = process.env.MAIL_TO?.trim() || user;
   const metadata = session.metadata || {};
@@ -265,7 +273,6 @@ export async function sendOrderNotification({ session, lineItems }) {
   const customerName = metadata.name || session.customer_details?.name || 'Non renseigné';
   const customerEmail = session.customer_details?.email || session.customer_email || 'Non renseigné';
   const total = formatMoney(session.amount_total);
-  const orderReference = getOrderNumber(session);
 
   try {
     await transport.sendMail({
@@ -298,6 +305,7 @@ export async function sendOrderNotification({ session, lineItems }) {
 }
 
 export async function sendCustomerOrderConfirmation({ session, lineItems }) {
+  const reference = requiredOrderNumber(session)
   const { user, transport } = createTransport();
   const metadata = session.metadata || {};
   const to = session.customer_details?.email || session.customer_email;
@@ -322,7 +330,6 @@ export async function sendCustomerOrderConfirmation({ session, lineItems }) {
   const total = formatMoney(session.amount_total);
   const address = metadata.address || '';
   const phone = metadata.phone || '';
-  const reference = getOrderNumber(session);
 
   try {
     await transport.sendMail({
