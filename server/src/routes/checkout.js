@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { randomUUID } from "node:crypto";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createOrderNumber, getOrderNumber } from "../../../client/netlify/functions/order-number.mjs";
 import Stripe from "stripe";
 import {
   discountFromCoupon,
@@ -64,7 +64,7 @@ router.post("/", async (req, res) => {
     const phone = String(customer.phone || "").trim().slice(0, 40);
     const address = String(customer.address || "").trim().slice(0, 300);
     const note = String(req.body?.note || "").trim().slice(0, 300);
-    const orderNumber = `MRZ-${randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`;
+    const orderNumber = createOrderNumber();
 
     if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: "Nom et email sont requis." });
@@ -164,8 +164,7 @@ router.post("/confirm", async (req, res) => {
     return res.json({
       paid: true,
       sessionId: session.id,
-      orderNumber:
-        session.metadata?.order_number || `MRZ-${session.id.slice(-12).toUpperCase()}`,
+      orderNumber: getOrderNumber(session),
       customer: {
         name: session.metadata?.name || session.customer_details?.name || "",
         email: session.customer_details?.email || session.customer_email || "",

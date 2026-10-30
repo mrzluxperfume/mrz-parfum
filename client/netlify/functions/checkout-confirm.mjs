@@ -1,4 +1,5 @@
 import { json, preflight, readJson } from "./http.mjs";
+import { getOrderNumber } from "./order-number.mjs";
 import { stripeClient } from "./stripe-session.mjs";
 
 export async function handler(event) {
@@ -36,8 +37,7 @@ export async function handler(event) {
     return json(200, {
       paid: true,
       sessionId: session.id,
-      orderNumber:
-        session.metadata?.order_number || `MRZ-${session.id.slice(-12).toUpperCase()}`,
+      orderNumber: getOrderNumber(session),
       customer: {
         name: session.metadata?.name || session.customer_details?.name || "",
         email: session.customer_details?.email || session.customer_email || "",

@@ -1,5 +1,5 @@
-import { randomUUID } from "node:crypto";
 import { json, preflight, readJson } from "./http.mjs";
+import { createOrderNumber } from "./order-number.mjs";
 import { clientUrl, mrzLogoFile, stripeClient } from "./stripe-session.mjs";
 import { discountFromCoupon, findPromotion } from "./coupon-stripe.mjs";
 import { checkoutLines } from "./offer-logic.mjs";
@@ -22,7 +22,7 @@ export async function handler(event) {
     const phone = String(customer.phone || "").trim().slice(0, 40);
     const address = String(customer.address || "").trim().slice(0, 300);
     const note = String(body.note || "").trim().slice(0, 300);
-    const orderNumber = `MRZ-${randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`;
+    const orderNumber = createOrderNumber();
 
     if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return json(400, { error: "Nom et email sont requis." });

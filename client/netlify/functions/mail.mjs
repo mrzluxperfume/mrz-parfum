@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { getOrderNumber } from "./order-number.mjs";
 
 function requiredEnv(name) {
   const value = process.env[name]?.trim();
@@ -264,7 +265,7 @@ export async function sendOrderNotification({ session, lineItems }) {
   const customerName = metadata.name || session.customer_details?.name || 'Non renseigné';
   const customerEmail = session.customer_details?.email || session.customer_email || 'Non renseigné';
   const total = formatMoney(session.amount_total);
-  const orderReference = metadata.order_number || session.id;
+  const orderReference = getOrderNumber(session);
 
   try {
     await transport.sendMail({
@@ -321,7 +322,7 @@ export async function sendCustomerOrderConfirmation({ session, lineItems }) {
   const total = formatMoney(session.amount_total);
   const address = metadata.address || '';
   const phone = metadata.phone || '';
-  const reference = metadata.order_number || session.id;
+  const reference = getOrderNumber(session);
 
   try {
     await transport.sendMail({
