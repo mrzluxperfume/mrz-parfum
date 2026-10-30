@@ -1,3 +1,8 @@
+import {
+  sendCustomerOrderConfirmation,
+  sendOrderNotification,
+} from "./mail.mjs";
+
 const DELIVERY_TABLE = "stripe_order_email_deliveries";
 
 async function claimDelivery(supabase, sessionId, column) {
@@ -65,13 +70,12 @@ export async function deliverOrderEmails(supabase, session, lineItems) {
   );
   if (error) throw error;
 
-  const mail = await import("./mail.mjs");
   const results = await Promise.allSettled([
     sendOnce(supabase, sessionId, "merchant_email_status", () =>
-      mail.sendOrderNotification({ session, lineItems }),
+      sendOrderNotification({ session, lineItems }),
     ),
     sendOnce(supabase, sessionId, "customer_email_status", () =>
-      mail.sendCustomerOrderConfirmation({ session, lineItems }),
+      sendCustomerOrderConfirmation({ session, lineItems }),
     ),
   ]);
   const failures = results
@@ -79,6 +83,7 @@ export async function deliverOrderEmails(supabase, session, lineItems) {
     .map((result) => result.reason?.message || String(result.reason));
 
   if (failures.length) {
+    console.error(`[order-email] Delivery failed for ${sessionId}:`, failures);
     throw new Error(failures.join("; "));
   }
 }

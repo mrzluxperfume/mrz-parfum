@@ -1,10 +1,17 @@
+import { createClient } from "@supabase/supabase-js";
+import { deliverOrderEmails } from "./order-email-delivery.mjs";
+import { json } from "./http.mjs";
+import { reserveOrderNumber } from "./order-number.mjs";
+import { persistPaidOrder } from "./paid-order.mjs";
+import { stripeClient } from "./stripe-session.mjs";
+
 const EVENT_TABLE = 'stripe_order_email_notifications'
 const PAID_EVENTS = new Set([
   'checkout.session.completed',
   'checkout.session.async_payment_succeeded',
 ])
 
-function getSupabase(createClient) {
+function getSupabase() {
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !key) throw new Error('Configuration Supabase manquante')
@@ -23,16 +30,19 @@ async function ensureEvent(supabase, event, session) {
   throw error
 }
 
-async function markEventSent(supabase, eventId) {
+async function setEventStatus(supabase, eventId, status, errorMessage = null) {
   const { error } = await supabase
     .from(EVENT_TABLE)
-    .update({ status: 'sent', last_error: null, updated_at: new Date().toISOString() })
+    .update({
+      status,
+      last_error: errorMessage,
+      updated_at: new Date().toISOString(),
+    })
     .eq('stripe_event_id', eventId)
   if (error) throw error
 }
 
-exports.handler = async function handler(event) {
-  const { json } = await import('./http.mjs')
+export async function handler(event) {
   if (event.httpMethod !== 'POST') {
     return json(405, { error: 'Méthode non autorisée.' })
   }
@@ -56,7 +66,6 @@ exports.handler = async function handler(event) {
   let stripe
   let stripeEvent
   try {
-    const { stripeClient } = await import('./stripe-session.mjs')
     stripe = stripeClient()
     stripeEvent = stripe.webhooks.constructEvent(rawBody, signature, signingSecret)
   } catch (error) {
@@ -77,34 +86,46 @@ exports.handler = async function handler(event) {
     return json(200, { received: true })
   }
 
+  let supabase
+  let eventRecorded = false
   try {
-    const [supabaseModule, orderModule, paidOrderModule, emailDeliveryModule] = await Promise.all([
-      import('@supabase/supabase-js'),
-      import('./order-number.mjs'),
-      import('./paid-order.mjs'),
-      import('./order-email-delivery.mjs'),
-    ])
-    const supabase = getSupabase(supabaseModule.createClient)
-
+    supabase = getSupabase()
     const session = await stripe.checkout.sessions.retrieve(eventSession.id, {
       expand: ['line_items'],
     })
+    if (session.mode !== 'payment' || session.payment_status !== 'paid') {
+      return json(200, { received: true })
+    }
+
     const lineItems = session.line_items?.data || []
-    const orderNumber = await orderModule.reserveOrderNumber(supabase, session.id)
+    const orderNumber = await reserveOrderNumber(supabase, session.id)
     const emailSession = {
       ...session,
       metadata: { ...session.metadata, order_number: orderNumber },
     }
 
-    await paidOrderModule.persistPaidOrder(supabase, emailSession, orderNumber)
+    await persistPaidOrder(supabase, emailSession, orderNumber)
     await ensureEvent(supabase, stripeEvent, eventSession)
-    await emailDeliveryModule.deliverOrderEmails(supabase, emailSession, lineItems)
+    eventRecorded = true
+    await deliverOrderEmails(supabase, emailSession, lineItems)
 
-    await markEventSent(supabase, stripeEvent.id)
+    await setEventStatus(supabase, stripeEvent.id, 'sent')
     console.log(`[stripe-webhook] Order ${orderNumber} saved and notifications processed.`)
     return json(200, { received: true })
   } catch (error) {
     console.error('[stripe-webhook]', stripeEvent.id, stripeEvent.type, error.message)
+    if (supabase && eventRecorded) {
+      try {
+        await setEventStatus(
+          supabase,
+          stripeEvent.id,
+          'failed',
+          String(error?.message || error).slice(0, 500),
+        )
+      } catch (statusError) {
+        console.error('[stripe-webhook] Could not record event failure:', statusError.message)
+      }
+    }
     return json(500, { error: 'Notification de commande impossible.' })
   }
 }

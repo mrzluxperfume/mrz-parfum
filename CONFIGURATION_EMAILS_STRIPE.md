@@ -144,7 +144,7 @@ Utilisez le domaine canonique **sans `www`** ci-dessus. Cette route `/api/stripe
 ```
 
 **Fichiers concernés** :
-- `client/netlify/functions/stripe-webhook.cjs` : Réception webhook
+- `client/netlify/functions/stripe-webhook.mjs` : Réception webhook
 - `client/netlify/functions/mail.mjs` : Fonctions d'envoi email
   - `sendOrderNotification()` : Email au propriétaire
   - `sendCustomerOrderConfirmation()` : Email au client
