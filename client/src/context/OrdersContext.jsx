@@ -71,6 +71,11 @@ export function OrdersProvider({ children }) {
 
   const placeOrder = useCallback(
     async ({ id, customer, items, note = '' }) => {
+      const orderId = String(id || '').trim()
+      if (!/^MR\d{5}$/.test(orderId)) {
+        throw new Error('Numéro de commande invalide ou manquant.')
+      }
+
       const lineItems = items.map((item) => ({
         productId: item.id,
         name: item.name,
@@ -82,7 +87,7 @@ export function OrdersProvider({ children }) {
       }))
       const total = lineItems.reduce((sum, l) => sum + l.lineTotal, 0)
       const order = {
-        id: id || `MRZ-${Date.now()}`,
+        id: orderId,
         createdAt: new Date().toISOString(),
         status: 'new',
         customer: {

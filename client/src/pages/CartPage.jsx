@@ -49,7 +49,7 @@ export default function CartPage() {
 
     const flag = `mrz_paid_${sessionId}`
     const savedOrderId = sessionStorage.getItem(flag)
-    if (savedOrderId && savedOrderId !== 'undefined') {
+    if (savedOrderId && /^MR\d{5}$/.test(savedOrderId)) {
       setOrderId(savedOrderId)
       setStatus('success')
       return
