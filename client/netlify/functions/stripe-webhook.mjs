@@ -1,6 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 import { json } from './http.mjs'
-import { sendOrderNotification } from './mail.mjs'
+import {
+  sendCustomerOrderConfirmation,
+  sendOrderNotification,
+} from './mail.mjs'
 import { stripeClient } from './stripe-session.mjs'
 
 const EVENT_TABLE = 'stripe_order_email_notifications'
@@ -18,45 +21,76 @@ function getSupabase() {
   })
 }
 
-async function claimEvent(supabase, event, session) {
+async function ensureEvent(supabase, event, session) {
   const { error: insertError } = await supabase.from(EVENT_TABLE).insert({
     stripe_event_id: event.id,
     checkout_session_id: session.id,
     status: 'processing',
   })
 
-  if (!insertError) return true
-  if (insertError.code !== '23505') throw insertError
-
-  const { data: existing, error: readError } = await supabase
-    .from(EVENT_TABLE)
-    .select('status')
-    .eq('stripe_event_id', event.id)
-    .maybeSingle()
-  if (readError) throw readError
-  if (existing?.status !== 'failed') return false
-
-  const { data: retry, error: retryError } = await supabase
-    .from(EVENT_TABLE)
-    .update({ status: 'processing', last_error: null, updated_at: new Date().toISOString() })
-    .eq('stripe_event_id', event.id)
-    .eq('status', 'failed')
-    .select('stripe_event_id')
-    .maybeSingle()
-  if (retryError) throw retryError
-  return Boolean(retry)
+  if (!insertError || insertError.code === '23505') return
+  throw insertError
 }
 
-async function markFailed(supabase, eventId, error) {
+async function claimDelivery(supabase, eventId, column) {
+  const { data, error } = await supabase
+    .from(EVENT_TABLE)
+    .update({
+      [column]: 'processing',
+      last_error: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('stripe_event_id', eventId)
+    .in(column, ['pending', 'failed'])
+    .select('stripe_event_id')
+    .maybeSingle()
+  if (error) throw error
+  return Boolean(data)
+}
+
+async function setDeliveryStatus(supabase, eventId, column, status, error = null) {
   const { error: updateError } = await supabase
     .from(EVENT_TABLE)
     .update({
+      [column]: status,
+      status: status === 'failed' ? 'failed' : 'processing',
+      last_error: error ? String(error.message || error).slice(0, 500) : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('stripe_event_id', eventId)
+  if (updateError) throw updateError
+}
+
+async function logDeliveryFailure(supabase, eventId, column, error) {
+  const { error: updateError } = await supabase
+    .from(EVENT_TABLE)
+    .update({
+      [column]: 'failed',
       status: 'failed',
       last_error: String(error?.message || error).slice(0, 500),
       updated_at: new Date().toISOString(),
     })
     .eq('stripe_event_id', eventId)
   if (updateError) console.error('[stripe-webhook] Could not record failure:', updateError.message)
+}
+
+async function sendOnce(supabase, eventId, column, send) {
+  if (!(await claimDelivery(supabase, eventId, column))) return
+  try {
+    await send()
+    await setDeliveryStatus(supabase, eventId, column, 'sent')
+  } catch (error) {
+    await logDeliveryFailure(supabase, eventId, column, error)
+    throw error
+  }
+}
+
+async function markEventSent(supabase, eventId) {
+  const { error } = await supabase
+    .from(EVENT_TABLE)
+    .update({ status: 'sent', last_error: null, updated_at: new Date().toISOString() })
+    .eq('stripe_event_id', eventId)
+  if (error) throw error
 }
 
 export async function handler(event) {
@@ -101,29 +135,25 @@ export async function handler(event) {
   let supabase
   try {
     supabase = getSupabase()
-    const claimed = await claimEvent(supabase, stripeEvent, eventSession)
-    if (!claimed) return json(200, { received: true, duplicate: true })
+    await ensureEvent(supabase, stripeEvent, eventSession)
+    const session = await stripe.checkout.sessions.retrieve(eventSession.id, {
+      expand: ['line_items'],
+    })
+    const lineItems = session.line_items?.data || []
 
-    try {
-      const session = await stripe.checkout.sessions.retrieve(eventSession.id, {
-        expand: ['line_items'],
-      })
-      await sendOrderNotification({
-        session,
-        lineItems: session.line_items?.data || [],
-      })
-    } catch (error) {
-      await markFailed(supabase, stripeEvent.id, error)
-      throw error
-    }
-
-    const { error: sentError } = await supabase
-      .from(EVENT_TABLE)
-      .update({ status: 'sent', last_error: null, updated_at: new Date().toISOString() })
-      .eq('stripe_event_id', stripeEvent.id)
-    if (sentError) {
-      console.error('[stripe-webhook] Email sent but status update failed:', sentError.message)
-    }
+    await sendOnce(
+      supabase,
+      stripeEvent.id,
+      'merchant_email_status',
+      () => sendOrderNotification({ session, lineItems }),
+    )
+    await sendOnce(
+      supabase,
+      stripeEvent.id,
+      'customer_email_status',
+      () => sendCustomerOrderConfirmation({ session, lineItems }),
+    )
+    await markEventSent(supabase, stripeEvent.id)
     return json(200, { received: true })
   } catch (error) {
     console.error('[stripe-webhook]', error.message)

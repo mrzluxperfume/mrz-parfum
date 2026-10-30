@@ -16,7 +16,9 @@ Si le projet existait déjà avec l’ancienne policy ouverte sur `customers` :
 collez aussi `supabase/secure-customers.sql` puis **Run**.
 
 Pour activer les emails de commande payée, exécutez aussi
-`supabase/stripe-order-email-notifications.sql` dans le SQL Editor.
+`supabase/stripe-order-email-notifications.sql` dans le SQL Editor. Si vous
+l’aviez déjà exécuté pour l’email vendeur, relancez-le pour ajouter le suivi
+séparé des emails vendeur et client.
 
 ## 3. Variables d’environnement
 
@@ -53,7 +55,9 @@ Dans Stripe, ajoutez un endpoint webhook vers
 `checkout.session.completed` et `checkout.session.async_payment_succeeded`.
 Copiez son secret de signature (`whsec_...`) dans la variable Netlify
 `STRIPE_WEBHOOK_SECRET`. Configurez aussi les variables SMTP ci-dessus pour
-recevoir un email après chaque paiement confirmé.
+que le vendeur et le client reçoivent chacun leur email après chaque paiement
+confirmé. L’email client contient la référence, les articles, les quantités et
+le total payé.
 
 Créez un endpoint distinct en mode test si vous souhaitez tester les paiements
 Stripe en mode test. Le tableau de bord Stripe conserve aussi chaque paiement
