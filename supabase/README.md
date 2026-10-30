@@ -17,8 +17,9 @@ collez aussi `supabase/secure-customers.sql` puis **Run**.
 
 Pour activer les emails de commande payée, exécutez aussi
 `supabase/stripe-order-email-notifications.sql` dans le SQL Editor. Si vous
-l’aviez déjà exécuté pour l’email vendeur, relancez-le pour ajouter le suivi
-séparé des emails vendeur et client.
+l’aviez déjà exécuté, relancez-le pour ajouter le suivi séparé des emails
+vendeur et client, ainsi que le registre qui garantit un numéro unique au
+format `MR12345` pour chaque session Stripe payée.
 
 ## 3. Variables d’environnement
 

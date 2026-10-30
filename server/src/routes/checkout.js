@@ -2,7 +2,8 @@ import { Router } from "express";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { createOrderNumber, getOrderNumber } from "../../../client/netlify/functions/order-number.mjs";
+import { reserveOrderNumber } from "../../../client/netlify/functions/order-number.mjs";
+import { supabase } from "../supabase.js";
 import Stripe from "stripe";
 import {
   discountFromCoupon,
@@ -64,7 +65,6 @@ router.post("/", async (req, res) => {
     const phone = String(customer.phone || "").trim().slice(0, 40);
     const address = String(customer.address || "").trim().slice(0, 300);
     const note = String(req.body?.note || "").trim().slice(0, 300);
-    const orderNumber = createOrderNumber();
 
     if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ error: "Nom et email sont requis." });
@@ -113,7 +113,6 @@ router.post("/", async (req, res) => {
         address,
         note,
         coupon: couponCode,
-        order_number: orderNumber,
         newsletter_opt_in: req.body?.newsletterOptIn === true ? "true" : "false",
       },
       branding_settings: {
@@ -152,6 +151,8 @@ router.post("/confirm", async (req, res) => {
       return res.status(402).json({ error: "Le paiement n'est pas encore confirmé." });
     }
 
+    const orderNumber = await reserveOrderNumber(supabase, session.id);
+
     const items = (session.line_items?.data || []).map((line) => ({
       id: line.id,
       name: line.description || "Parfum",
@@ -164,7 +165,7 @@ router.post("/confirm", async (req, res) => {
     return res.json({
       paid: true,
       sessionId: session.id,
-      orderNumber: getOrderNumber(session),
+      orderNumber,
       customer: {
         name: session.metadata?.name || session.customer_details?.name || "",
         email: session.customer_details?.email || session.customer_email || "",

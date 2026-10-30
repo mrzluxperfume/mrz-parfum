@@ -1,5 +1,4 @@
 import { json, preflight, readJson } from "./http.mjs";
-import { createOrderNumber } from "./order-number.mjs";
 import { clientUrl, mrzLogoFile, stripeClient } from "./stripe-session.mjs";
 import { discountFromCoupon, findPromotion } from "./coupon-stripe.mjs";
 import { checkoutLines } from "./offer-logic.mjs";
@@ -22,7 +21,6 @@ export async function handler(event) {
     const phone = String(customer.phone || "").trim().slice(0, 40);
     const address = String(customer.address || "").trim().slice(0, 300);
     const note = String(body.note || "").trim().slice(0, 300);
-    const orderNumber = createOrderNumber();
 
     if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return json(400, { error: "Nom et email sont requis." });
@@ -71,7 +69,6 @@ export async function handler(event) {
         address,
         note,
         coupon: couponCode,
-        order_number: orderNumber,
         newsletter_opt_in: body.newsletterOptIn === true ? "true" : "false",
       },
       branding_settings: {

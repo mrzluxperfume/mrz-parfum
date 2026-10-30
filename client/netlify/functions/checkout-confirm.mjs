@@ -1,6 +1,16 @@
+import { createClient } from "@supabase/supabase-js";
 import { json, preflight, readJson } from "./http.mjs";
-import { getOrderNumber } from "./order-number.mjs";
+import { reserveOrderNumber } from "./order-number.mjs";
 import { stripeClient } from "./stripe-session.mjs";
+
+function getSupabase() {
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Configuration Supabase manquante");
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
 
 export async function handler(event) {
   const early = preflight(event);
@@ -25,6 +35,8 @@ export async function handler(event) {
       return json(402, { error: "Le paiement n'est pas encore confirmé." });
     }
 
+    const orderNumber = await reserveOrderNumber(getSupabase(), session.id);
+
     const items = (session.line_items?.data || []).map((line) => ({
       id: line.id,
       name: line.description || "Parfum",
@@ -37,7 +49,7 @@ export async function handler(event) {
     return json(200, {
       paid: true,
       sessionId: session.id,
-      orderNumber: getOrderNumber(session),
+      orderNumber,
       customer: {
         name: session.metadata?.name || session.customer_details?.name || "",
         email: session.customer_details?.email || session.customer_email || "",

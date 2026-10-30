@@ -4,6 +4,7 @@ import {
   sendCustomerOrderConfirmation,
   sendOrderNotification,
 } from './mail.mjs'
+import { reserveOrderNumber } from './order-number.mjs'
 import { stripeClient } from './stripe-session.mjs'
 
 const EVENT_TABLE = 'stripe_order_email_notifications'
@@ -140,23 +141,29 @@ export async function handler(event) {
       expand: ['line_items'],
     })
     const lineItems = session.line_items?.data || []
+    const orderNumber = await reserveOrderNumber(supabase, session.id)
+    const emailSession = {
+      ...session,
+      metadata: { ...session.metadata, order_number: orderNumber },
+    }
 
-    await sendOnce(
-      supabase,
-      stripeEvent.id,
-      'merchant_email_status',
-      () => sendOrderNotification({ session, lineItems }),
-    )
-    await sendOnce(
-      supabase,
-      stripeEvent.id,
-      'customer_email_status',
-      () => sendCustomerOrderConfirmation({ session, lineItems }),
-    )
+    const emailErrors = []
+    for (const [column, send] of [
+      ['merchant_email_status', () => sendOrderNotification({ session: emailSession, lineItems })],
+      ['customer_email_status', () => sendCustomerOrderConfirmation({ session: emailSession, lineItems })],
+    ]) {
+      try {
+        await sendOnce(supabase, stripeEvent.id, column, send)
+      } catch (error) {
+        emailErrors.push(`${column}: ${error.message || error}`)
+      }
+    }
+    if (emailErrors.length) throw new Error(emailErrors.join('; '))
+
     await markEventSent(supabase, stripeEvent.id)
     return json(200, { received: true })
   } catch (error) {
-    console.error('[stripe-webhook]', error.message)
+    console.error('[stripe-webhook]', stripeEvent.id, stripeEvent.type, error.message)
     return json(500, { error: 'Notification de commande impossible.' })
   }
 }
