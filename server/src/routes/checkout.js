@@ -147,7 +147,7 @@ router.post("/confirm", async (req, res) => {
     }
 
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ["line_items"],
+      expand: ["line_items.data.price.product"],
     });
 
     if (session.payment_status !== "paid") {

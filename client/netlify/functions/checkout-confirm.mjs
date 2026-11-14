@@ -30,7 +30,7 @@ export async function handler(event) {
     }
 
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ["line_items"],
+      expand: ["line_items.data.price.product"],
     });
 
     if (session.payment_status !== "paid") {

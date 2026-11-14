@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Trash2 } from 'lucide-react'
 import { useOrders } from '../../context/OrdersContext'
 import { formatPrice } from '../../utils/format'
@@ -17,8 +18,14 @@ const STATUS_LABEL = Object.fromEntries(
 
 export default function AdminOrdersPage() {
   const { orders, loadError, source, refreshOrders, updateOrderStatus, deleteOrder } = useOrders()
+  const [searchParams] = useSearchParams()
   const [filter, setFilter] = useState('all')
   const [selectedId, setSelectedId] = useState(null)
+
+  useEffect(() => {
+    const orderId = String(searchParams.get('order') || '').trim()
+    if (orderId) setSelectedId(orderId)
+  }, [searchParams])
 
   const filtered = useMemo(() => {
     if (filter === 'all') return orders

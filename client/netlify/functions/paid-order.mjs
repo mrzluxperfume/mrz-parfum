@@ -18,10 +18,18 @@ export function paidOrderFromSession(session, orderNumber) {
       line.amount_total == null
         ? unitPrice * quantity
         : Number(line.amount_total) / 100;
+    const product = line.price?.product;
+    const image =
+      product && typeof product === "object"
+        ? String(product.images?.[0] || "")
+        : "";
     return {
-      productId: line.price?.product?.id || line.price?.product || line.id,
+      productId:
+        (product && typeof product === "object" ? product.id : null) ||
+        line.price?.product ||
+        line.id,
       name: line.description || "Parfum",
-      image: "",
+      image,
       volume: "",
       unitPrice,
       quantity,

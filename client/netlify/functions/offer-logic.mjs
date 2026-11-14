@@ -63,6 +63,13 @@ export function checkoutLines(items, offers = []) {
     const label = row.item.volume
       ? `${row.item.name} — ${row.item.volume}`
       : String(row.item.name);
+    const image = String(row.item.image || "").trim();
+    const images =
+      /^https:\/\//i.test(image) &&
+      !/mrz-perfume\.com/i.test(image) &&
+      !image.startsWith("data:")
+        ? [image]
+        : undefined;
     return {
       quantity: row.quantity,
       price_data: {
@@ -71,6 +78,7 @@ export function checkoutLines(items, offers = []) {
         product_data: {
           name: row.unit < row.full ? `${label} (offre 2e produit)` : label,
           description: "Paiement sécurisé de votre commande MRZ.",
+          ...(images ? { images } : {}),
         },
       },
     };

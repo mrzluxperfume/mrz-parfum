@@ -1,5 +1,10 @@
 import nodemailer from "nodemailer";
 
+export {
+  sendCustomerOrderConfirmation,
+  sendOrderNotification,
+} from "./order-emails.mjs";
+
 const ORDER_NOTIFICATION_EMAIL = "mrz.lux.perfume@gmail.com";
 
 function requiredEnv(name) {
@@ -50,7 +55,7 @@ function mapSmtpError(err) {
 
 export async function sendContactEmail({ name, email, message }) {
   const { user, transport } = createTransport();
-  const to = process.env.MAIL_TO?.trim() || user;
+  const to = process.env.MAIL_TO?.trim() || ORDER_NOTIFICATION_EMAIL || user;
 
   try {
     await transport.sendMail({
@@ -80,13 +85,6 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;");
 }
 
-function requiredOrderNumber(session) {
-  const orderNumber = String(session?.metadata?.order_number || '').trim()
-  if (!/^MR\d{5}$/.test(orderNumber)) {
-    throw new Error('Numéro de commande manquant ou invalide')
-  }
-  return orderNumber
-}
 
 function formatMessageHtml(message) {
   return escapeHtml(message)
@@ -239,125 +237,6 @@ export async function sendNewsletterEmail({
         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
         "X-Mailer": "MRZ Perfume",
       },
-    });
-  } catch (err) {
-    throw mapSmtpError(err);
-  }
-}
-
-export async function sendOrderNotification({ session, lineItems }) {
-  const orderReference = requiredOrderNumber(session)
-  const { user, transport } = createTransport();
-  const to = ORDER_NOTIFICATION_EMAIL;
-  const metadata = session.metadata || {};
-  const currency = String(session.currency || 'eur').toUpperCase();
-  const formatMoney = (amount) =>
-    new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency,
-    }).format((Number(amount) || 0) / 100);
-  const paymentIntent =
-    typeof session.payment_intent === 'string'
-      ? session.payment_intent
-      : session.payment_intent?.id;
-  const paymentUrl = paymentIntent
-    ? `https://dashboard.stripe.com/${session.livemode ? '' : 'test/'}payments/${encodeURIComponent(paymentIntent)}`
-    : '';
-  const rows = lineItems.map((item) => {
-    const name = item.description || 'Article MRZ Perfume';
-    const quantity = Number(item.quantity) || 1;
-    const total = formatMoney(item.amount_total);
-    return {
-      text: `${quantity} × ${name} — ${total}`,
-      html: `<tr><td style="padding:8px;border-bottom:1px solid #eee;">${escapeHtml(name)}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${quantity}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">${escapeHtml(total)}</td></tr>`,
-    };
-  });
-  const customerName = metadata.name || session.customer_details?.name || 'Non renseigné';
-  const customerEmail = session.customer_details?.email || session.customer_email || 'Non renseigné';
-  const total = formatMoney(session.amount_total);
-
-  try {
-    await transport.sendMail({
-      from: `"MRZ Perfume" <${user}>`,
-      to,
-      replyTo: customerEmail !== 'Non renseigné' ? customerEmail : undefined,
-      subject: `Commande payée — ${orderReference}`.slice(0, 180),
-      text: [
-        'Une nouvelle commande MRZ Perfume a été payée.',
-        '',
-        `Référence Stripe : ${orderReference}`,
-        `Client : ${customerName}`,
-        `Email : ${customerEmail}`,
-        `Téléphone : ${metadata.phone || 'Non renseigné'}`,
-        `Adresse : ${metadata.address || 'Non renseignée'}`,
-        '',
-        'Articles :',
-        ...rows.map((row) => row.text),
-        '',
-        `Total payé : ${total}`,
-        `Coupon : ${metadata.coupon || 'Aucun'}`,
-        `Note : ${metadata.note || 'Aucune'}`,
-        paymentUrl ? `Voir le paiement Stripe : ${paymentUrl}` : '',
-      ].filter(Boolean).join('\n'),
-      html: `<!doctype html><html lang="fr"><body style="font-family:Arial,sans-serif;color:#1a1a1a;line-height:1.5"><h1>Commande payée</h1><p>Une nouvelle commande MRZ Perfume a été confirmée.</p><p><strong>Référence Stripe :</strong> ${escapeHtml(orderReference)}<br><strong>Client :</strong> ${escapeHtml(customerName)}<br><strong>Email :</strong> ${escapeHtml(customerEmail)}<br><strong>Téléphone :</strong> ${escapeHtml(metadata.phone || 'Non renseigné')}<br><strong>Adresse :</strong> ${escapeHtml(metadata.address || 'Non renseignée')}</p><table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:8px">Article</th><th style="padding:8px">Qté</th><th style="text-align:right;padding:8px">Total</th></tr></thead><tbody>${rows.map((row) => row.html).join('')}</tbody></table><p><strong>Total payé : ${escapeHtml(total)}</strong><br>Coupon : ${escapeHtml(metadata.coupon || 'Aucun')}<br>Note : ${escapeHtml(metadata.note || 'Aucune')}</p>${paymentUrl ? `<p><a href="${paymentUrl}">Voir le paiement dans Stripe</a></p>` : ''}</body></html>`,
-    });
-  } catch (err) {
-    throw mapSmtpError(err);
-  }
-}
-
-export async function sendCustomerOrderConfirmation({ session, lineItems }) {
-  const reference = requiredOrderNumber(session)
-  const { user, transport } = createTransport();
-  const metadata = session.metadata || {};
-  const to = session.customer_details?.email || session.customer_email;
-  if (!to) throw new Error('Email client manquant dans la session Stripe');
-
-  const currency = String(session.currency || 'eur').toUpperCase();
-  const formatMoney = (amount) =>
-    new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency,
-    }).format((Number(amount) || 0) / 100);
-  const rows = lineItems.map((item) => {
-    const name = item.description || 'Article MRZ Perfume';
-    const quantity = Number(item.quantity) || 1;
-    const total = formatMoney(item.amount_total);
-    return {
-      text: `${quantity} × ${name} — ${total}`,
-      html: `<tr><td style="padding:10px 8px;border-bottom:1px solid #eee;">${escapeHtml(name)}</td><td style="padding:10px 8px;border-bottom:1px solid #eee;text-align:center;">${quantity}</td><td style="padding:10px 8px;border-bottom:1px solid #eee;text-align:right;">${escapeHtml(total)}</td></tr>`,
-    };
-  });
-  const customerName = metadata.name || session.customer_details?.name || 'Bonjour';
-  const total = formatMoney(session.amount_total);
-  const address = metadata.address || '';
-  const phone = metadata.phone || '';
-
-  try {
-    await transport.sendMail({
-      from: `"MRZ Perfume" <${user}>`,
-      to,
-      replyTo: user,
-      subject: `Confirmation de votre commande MRZ — ${reference}`.slice(0, 180),
-      text: [
-        `Bonjour ${customerName},`,
-        '',
-        'Nous vous confirmons que votre paiement a été reçu et que votre commande est enregistrée.',
-        `Référence : ${reference}`,
-        '',
-        'Détail de votre commande :',
-        ...rows.map((row) => row.text),
-        '',
-        `Total payé : ${total}`,
-        metadata.coupon ? `Code utilisé : ${metadata.coupon}` : '',
-        address ? `Adresse de livraison : ${address}` : '',
-        phone ? `Téléphone : ${phone}` : '',
-        metadata.note ? `Votre note : ${metadata.note}` : '',
-        '',
-        'Merci pour votre commande,',
-        'MRZ Perfume',
-      ].filter(Boolean).join('\n'),
-      html: `<!doctype html><html lang="fr"><body style="margin:0;padding:24px;background:#f7f5f2;font-family:Arial,sans-serif;color:#1a1a1a;line-height:1.6"><main style="max-width:620px;margin:0 auto;padding:32px;background:#fff"><p>Bonjour ${escapeHtml(customerName)},</p><h1 style="font-family:Georgia,serif;font-weight:normal">Merci pour votre commande</h1><p>Votre paiement a été reçu et votre commande est confirmée.</p><p><strong>Référence :</strong> ${escapeHtml(reference)}</p><h2 style="font-size:16px">Détail de votre commande</h2><table style="width:100%;border-collapse:collapse"><thead><tr><th style="padding:8px;text-align:left">Article</th><th style="padding:8px">Qté</th><th style="padding:8px;text-align:right">Total</th></tr></thead><tbody>${rows.map((row) => row.html).join('')}</tbody></table><p style="text-align:right;font-size:18px"><strong>Total payé : ${escapeHtml(total)}</strong></p>${metadata.coupon ? `<p>Code utilisé : ${escapeHtml(metadata.coupon)}</p>` : ''}${address ? `<p>Adresse de livraison : ${escapeHtml(address)}</p>` : ''}${phone ? `<p>Téléphone : ${escapeHtml(phone)}</p>` : ''}${metadata.note ? `<p>Votre note : ${escapeHtml(metadata.note)}</p>` : ''}<p>Merci pour votre confiance,<br />MRZ Perfume</p></main></body></html>`,
     });
   } catch (err) {
     throw mapSmtpError(err);

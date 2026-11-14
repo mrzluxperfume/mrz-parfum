@@ -91,7 +91,7 @@ export async function handler(event) {
   try {
     supabase = getSupabase()
     const session = await stripe.checkout.sessions.retrieve(eventSession.id, {
-      expand: ['line_items'],
+      expand: ['line_items.data.price.product'],
     })
     if (session.mode !== 'payment' || session.payment_status !== 'paid') {
       return json(200, { received: true })
@@ -104,13 +104,28 @@ export async function handler(event) {
       metadata: { ...session.metadata, order_number: orderNumber },
     }
 
+    // Persist the paid order first — never block confirmation on SMTP.
     await persistPaidOrder(supabase, emailSession, orderNumber)
     await ensureEvent(supabase, stripeEvent, eventSession)
     eventRecorded = true
-    await deliverOrderEmails(supabase, emailSession, lineItems)
 
-    await setEventStatus(supabase, stripeEvent.id, 'sent')
-    console.log(`[stripe-webhook] Order ${orderNumber} saved and notifications processed.`)
+    try {
+      await deliverOrderEmails(supabase, emailSession, lineItems)
+      await setEventStatus(supabase, stripeEvent.id, 'sent')
+      console.log(`[stripe-webhook] Order ${orderNumber} saved and site emails sent.`)
+    } catch (emailError) {
+      await setEventStatus(
+        supabase,
+        stripeEvent.id,
+        'failed',
+        String(emailError?.message || emailError).slice(0, 500),
+      )
+      console.error(
+        `[stripe-webhook] Order ${orderNumber} saved; site emails pending:`,
+        emailError.message,
+      )
+    }
+
     return json(200, { received: true })
   } catch (error) {
     console.error('[stripe-webhook]', stripeEvent.id, stripeEvent.type, error.message)
@@ -126,6 +141,7 @@ export async function handler(event) {
         console.error('[stripe-webhook] Could not record event failure:', statusError.message)
       }
     }
-    return json(500, { error: 'Notification de commande impossible.' })
+    // Order persistence errors still return 500 so Stripe retries the event.
+    return json(500, { error: 'Traitement de commande impossible.' })
   }
 }

@@ -105,13 +105,23 @@ Chaque paiement réussi peut produire **quatre messages distincts** :
 | Client | Reçu Stripe du paiement | Confirmation MRZ avec numéro, articles, quantités, total et coordonnées de livraison |
 | Boutique | Alerte de paiement Stripe | Notification MRZ à `mrz.lux.perfume@gmail.com` avec les articles et coordonnées du client |
 
-### Emails Stripe
+### Emails Stripe (Emails 1 et 2 — natifs, pas codés dans le site)
 
-- **Reçu au client** : le checkout transmet déjà l'email du client à `payment_intent_data.receipt_email`. Dans le Dashboard Stripe, activez l'envoi des reçus pour les paiements réussis dans **Settings > Customer emails > Successful payments** (le libellé peut varier selon la langue du Dashboard).
-- **Alerte à la boutique** : dans les paramètres de notifications du compte Stripe, activez les notifications email pour les paiements réussis et vérifiez que le compte destinataire est `mrz.lux.perfume@gmail.com`.
-- Si vous testez, vérifiez aussi les réglages du **mode test**. Stripe et le site ont des paramètres séparés pour les emails.
+Ces deux emails sont envoyés **par Stripe**, pas par NodeMailer. Le checkout envoie déjà `payment_intent_data.receipt_email` avec l’email client.
 
-Stripe contrôle ces deux emails natifs depuis son Dashboard : le code du site ne peut pas forcer Stripe à les envoyer si ces options sont désactivées.
+#### Email 2 — Reçu client
+1. Ouvrez le [Dashboard Stripe](https://dashboard.stripe.com/)
+2. **Settings** → **Customer emails** (ou **Paramètres** → **Emails clients**)
+3. Activez **Successful payments** / **Paiements réussis**
+4. Vérifiez aussi en **mode test** si vous testez avec des cartes `4242…`
+
+#### Email 1 — Notification paiement administrateur
+1. Dashboard Stripe → icône profil / **Settings**
+2. **Notifications** (ou **Team settings** → notifications email du compte)
+3. Activez les alertes pour **Successful payments** / paiements réussis
+4. Assurez-vous que l’adresse du compte Stripe (ou destinataire des notifications) est bien `mrz.lux.perfume@gmail.com` (même boîte que Contact / `MAIL_TO`)
+
+Stripe contrôle ces deux emails natifs : le code du site **ne peut pas** les forcer si ces options sont désactivées. En mode test, les reçus automatiques peuvent être limités selon le compte Stripe.
 
 ### Emails envoyés par le site
 

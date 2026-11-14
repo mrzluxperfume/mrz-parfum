@@ -1,7 +1,7 @@
 import {
   sendCustomerOrderConfirmation,
   sendOrderNotification,
-} from "./mail.mjs";
+} from "./order-emails.mjs";
 
 const DELIVERY_TABLE = "stripe_order_email_deliveries";
 
