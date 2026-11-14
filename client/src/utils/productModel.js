@@ -1,3 +1,5 @@
+import { resolveProductImage } from '../lib/productImageUrl'
+
 /** @deprecated kept for any leftover imports — volumes are free-form now */
 const SIZE_OPTIONS = ['50 ml', '100 ml']
 
@@ -66,17 +68,20 @@ export function normalizeProduct(raw) {
         ? enabledSizes[0].volume
         : enabledSizes.map((s) => s.volume).join(' / ')
 
-  return {
+  const categorySlug = raw.categorySlug || slugify(raw.category || raw.brand)
+  const collectionSlug =
+    raw.collectionSlug || raw.categorySlug || slugify(raw.collection)
+
+  const normalized = {
     id: raw.id,
     name: raw.name || '',
     slug: raw.slug || slugify(raw.name),
     image: raw.image || '',
     brand: raw.brand || raw.category || '',
     category: raw.category || raw.brand || '',
-    categorySlug: raw.categorySlug || slugify(raw.category || raw.brand),
+    categorySlug,
     collection: raw.collection || raw.category || '',
-    collectionSlug:
-      raw.collectionSlug || raw.categorySlug || slugify(raw.collection),
+    collectionSlug,
     sizes,
     price,
     volume: volumeLabel,
@@ -86,6 +91,12 @@ export function normalizeProduct(raw) {
     fragranceNotes: normalizeFragranceNotes(raw.fragranceNotes),
     description: raw.description ?? null,
   }
+
+  // Replace dead WordPress URLs with local collection bottles so the shop
+  // never renders broken <img> sources from the old mrz-perfume.com host.
+  normalized.image = resolveProductImage(normalized)
+
+  return normalized
 }
 
 export function normalizeFragranceNotes(raw) {

@@ -4,6 +4,7 @@ import { Trash2 } from 'lucide-react'
 import Container from '../components/ui/Container'
 import Button from '../components/ui/Button'
 import NoIndex from '../components/NoIndex'
+import ProductImage from '../components/product/ProductImage'
 import { useCart } from '../context/CartContext'
 import api from '../services/api'
 import { formatPrice } from '../utils/format'
@@ -259,9 +260,8 @@ export default function CartPage() {
                       to={`/product/${item.slug}`}
                       className="h-24 w-24 shrink-0 overflow-hidden bg-fog"
                     >
-                      <img
-                        src={item.image}
-                        alt=""
+                      <ProductImage
+                        product={item}
                         className="h-full w-full object-cover"
                       />
                     </Link>

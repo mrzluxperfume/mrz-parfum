@@ -25,15 +25,14 @@ export function collectionDisplayName(slug, name) {
   return displayNames[slug] || name
 }
 
-/** Official MRZ collections = product categories from mrz-perfume.com */
+/** Official MRZ collections — local bottle art (old WordPress host is gone). */
 export const collections = [
   {
     id: 'lamas',
     slug: 'lamas',
     name: 'Lamas',
     description: 'Collection exclusive Lamas',
-    image:
-      'https://mrz-perfume.com/wp-content/uploads/2025/11/LAMAS-NAVY.jpg',
+    image: '/product/bottle-lamas.png',
     tone: 'warm',
   },
   {
@@ -41,8 +40,7 @@ export const collections = [
     slug: 'maison-mrz',
     name: 'Maison MRZ',
     description: 'Collection exclusive de la Maison',
-    image:
-      'https://mrz-perfume.com/wp-content/uploads/2025/12/image0-1.png',
+    image: '/product/bottle-maison-mrz.png',
     tone: 'dark',
   },
   {
@@ -50,8 +48,7 @@ export const collections = [
     slug: 'collection-dubai',
     name: 'Collection Dubai',
     description: 'Parfums de Dubaï — collection luxe',
-    image:
-      'https://mrz-perfume.com/wp-content/uploads/2025/11/AMEERAT-NOIR.webp',
+    image: '/product/bottle-dubai.png',
     tone: 'gold',
   },
   {
@@ -59,8 +56,7 @@ export const collections = [
     slug: 'body-splash',
     name: 'Body Splash',
     description: 'Brumes et body splash',
-    image:
-      'https://mrz-perfume.com/wp-content/uploads/2025/11/BRUME-CORPORELLE-MUSC.jpg',
+    image: '/product/bottle-body-splash.png',
     tone: 'light',
   },
   {
@@ -68,8 +64,7 @@ export const collections = [
     slug: 'room-diffuseur',
     name: "Parfum d'intérieur",
     description: "Parfums d'ambiance",
-    image:
-      'https://mrz-perfume.com/wp-content/uploads/2025/11/DIFFUSEUR-OUD.jpg',
+    image: '/product/bottle-diffuseur.png',
     tone: 'warm',
   },
   {
@@ -77,8 +72,7 @@ export const collections = [
     slug: 'parfum-osma',
     name: 'Parfum Osma',
     description: 'Collection exclusive Osma',
-    image:
-      'https://mrz-perfume.com/wp-content/uploads/2025/11/CITRUS-F.webp',
+    image: '/product/bottle-osma.png',
     tone: 'light',
   },
 ]

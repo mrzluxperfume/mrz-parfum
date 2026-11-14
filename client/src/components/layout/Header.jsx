@@ -15,6 +15,7 @@ import { useCollections } from '../../context/CollectionsContext'
 import { useCatalog } from '../../context/CatalogContext'
 import { useCart } from '../../context/CartContext'
 import { cn, formatPrice } from '../../utils/format'
+import ProductImage from '../product/ProductImage'
 import BrandLogo from './BrandLogo'
 
 const SEARCH_LIMIT = 6
@@ -44,9 +45,8 @@ function SearchResults({ results, query, onSelect, onSeeAll }) {
                 onClick={onSelect}
                 className="flex items-center gap-3 border-b border-ink/5 px-3 py-2.5 transition hover:bg-fog"
               >
-                <img
-                  src={product.image}
-                  alt=""
+                <ProductImage
+                  product={product}
                   className="size-12 shrink-0 object-cover"
                 />
                 <span className="min-w-0 flex-1">

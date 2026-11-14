@@ -18,6 +18,10 @@ import {
   isSupabaseConfigured,
   supabase,
 } from '../lib/supabase'
+import {
+  collectionImageFallback,
+  isUnusableProductImage,
+} from '../lib/productImageUrl'
 
 const CollectionsContext = createContext(null)
 const STORAGE_KEY = 'mrz_collections_v1'
@@ -25,12 +29,15 @@ const STORAGE_KEY = 'mrz_collections_v1'
 function normalizeCollection(raw) {
   const name = String(raw?.name || '').trim()
   const slug = slugify(raw?.slug || name)
+  const image = String(raw?.image || '').trim()
   return {
     id: String(raw?.id || slug),
     slug,
     name: collectionDisplayName(slug, name),
     description: String(raw?.description || '').trim(),
-    image: raw?.image || '',
+    image: isUnusableProductImage(image)
+      ? collectionImageFallback(slug)
+      : image,
     tone: raw?.tone || 'dark',
   }
 }

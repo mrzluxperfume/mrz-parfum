@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Button from '../ui/Button'
+import ProductImage from './ProductImage'
 import { useCart } from '../../context/CartContext'
 import { formatPrice } from '../../utils/format'
 import { getEnabledSizes } from '../../utils/productModel'
@@ -35,9 +36,8 @@ export default function ProductCard({ product }) {
         className="relative block overflow-hidden rounded-[var(--radius-media)] bg-fog"
       >
         <div className="aspect-square overflow-hidden">
-          <img
-            src={product.image}
-            alt={product.name}
+          <ProductImage
+            product={product}
             loading="lazy"
             className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
           />

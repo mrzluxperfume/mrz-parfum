@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import Container from '../components/ui/Container'
 import Button from '../components/ui/Button'
+import ProductImage from '../components/product/ProductImage'
 import { brand } from '../data/brand'
 import {
   profileLine,
@@ -404,15 +405,10 @@ function Results({ answers, results, onRestart }) {
             className="grid gap-4 py-6 sm:grid-cols-[88px_1fr_auto] sm:items-center"
           >
             <Link to={`/product/${product.slug}`} className="block bg-fog">
-              {product.image ? (
-                <img
-                  src={product.image}
-                  alt=""
-                  className="h-24 w-full object-cover sm:h-[88px] sm:w-[88px]"
-                />
-              ) : (
-                <span className="block h-24 sm:h-[88px] sm:w-[88px]" />
-              )}
+              <ProductImage
+                product={product}
+                className="h-24 w-full object-cover sm:h-[88px] sm:w-[88px]"
+              />
             </Link>
             <div className="min-w-0">
               <p className="text-[11px] text-ink/45">N° {index + 1}</p>

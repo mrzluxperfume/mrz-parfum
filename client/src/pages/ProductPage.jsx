@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import Container from '../components/ui/Container'
 import Button from '../components/ui/Button'
 import ProductEditorial from '../components/product/ProductEditorial'
+import ProductImage from '../components/product/ProductImage'
 import { useCart } from '../context/CartContext'
 import { useCatalog } from '../context/CatalogContext'
 import { formatPrice } from '../utils/format'
@@ -58,15 +59,11 @@ export default function ProductPage() {
 
         <div className="mt-8 grid gap-10 md:grid-cols-2 md:items-start md:gap-12 lg:gap-16">
           <div className="overflow-hidden bg-fog md:sticky md:top-28">
-            {product.image ? (
-              <img
-                src={product.image}
-                alt={product.name}
-                className="aspect-square w-full object-cover"
-              />
-            ) : (
-              <div className="aspect-square" />
-            )}
+            <ProductImage
+              product={product}
+              loading="eager"
+              className="aspect-square w-full object-cover"
+            />
           </div>
 
           <div>
