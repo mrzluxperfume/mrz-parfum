@@ -92,8 +92,7 @@ export function normalizeProduct(raw) {
     description: raw.description ?? null,
   }
 
-  // Replace dead WordPress URLs with local collection bottles so the shop
-  // never renders broken <img> sources from the old mrz-perfume.com host.
+  // Drop dead mrz-perfume.com WordPress URLs — real photos must be re-uploaded.
   normalized.image = resolveProductImage(normalized)
 
   return normalized

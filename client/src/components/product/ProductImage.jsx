@@ -1,8 +1,5 @@
 import { useEffect, useState } from 'react'
-import {
-  collectionImageFallback,
-  resolveProductImage,
-} from '../../lib/productImageUrl'
+import { resolveProductImage } from '../../lib/productImageUrl'
 
 export default function ProductImage({
   product,
@@ -11,15 +8,16 @@ export default function ProductImage({
   className = '',
   loading = 'lazy',
 }) {
-  const resolved = resolveProductImage(product || src, product?.categorySlug)
-  const fallback = collectionImageFallback(
-    product?.categorySlug || product?.collectionSlug,
-  )
+  const resolved = resolveProductImage(product || src)
   const [current, setCurrent] = useState(resolved)
 
   useEffect(() => {
     setCurrent(resolved)
   }, [resolved])
+
+  if (!current) {
+    return <span className={`block bg-fog ${className}`} aria-hidden="true" />
+  }
 
   return (
     <img
@@ -27,9 +25,7 @@ export default function ProductImage({
       alt={alt || product?.name || ''}
       loading={loading}
       className={className}
-      onError={() => {
-        if (current !== fallback) setCurrent(fallback)
-      }}
+      onError={() => setCurrent('')}
     />
   )
 }

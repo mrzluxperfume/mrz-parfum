@@ -25,14 +25,14 @@ export function collectionDisplayName(slug, name) {
   return displayNames[slug] || name
 }
 
-/** Official MRZ collections — local bottle art (old WordPress host is gone). */
+/** Official MRZ collections — images empty until re-uploaded (old WP host is gone). */
 export const collections = [
   {
     id: 'lamas',
     slug: 'lamas',
     name: 'Lamas',
     description: 'Collection exclusive Lamas',
-    image: '/product/bottle-lamas.png',
+    image: '',
     tone: 'warm',
   },
   {
@@ -40,7 +40,7 @@ export const collections = [
     slug: 'maison-mrz',
     name: 'Maison MRZ',
     description: 'Collection exclusive de la Maison',
-    image: '/product/bottle-maison-mrz.png',
+    image: '',
     tone: 'dark',
   },
   {
@@ -48,7 +48,7 @@ export const collections = [
     slug: 'collection-dubai',
     name: 'Collection Dubai',
     description: 'Parfums de Dubaï — collection luxe',
-    image: '/product/bottle-dubai.png',
+    image: '',
     tone: 'gold',
   },
   {
@@ -56,7 +56,7 @@ export const collections = [
     slug: 'body-splash',
     name: 'Body Splash',
     description: 'Brumes et body splash',
-    image: '/product/bottle-body-splash.png',
+    image: '',
     tone: 'light',
   },
   {
@@ -64,7 +64,7 @@ export const collections = [
     slug: 'room-diffuseur',
     name: "Parfum d'intérieur",
     description: "Parfums d'ambiance",
-    image: '/product/bottle-diffuseur.png',
+    image: '',
     tone: 'warm',
   },
   {
@@ -72,7 +72,7 @@ export const collections = [
     slug: 'parfum-osma',
     name: 'Parfum Osma',
     description: 'Collection exclusive Osma',
-    image: '/product/bottle-osma.png',
+    image: '',
     tone: 'light',
   },
 ]
