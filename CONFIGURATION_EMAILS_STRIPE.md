@@ -129,6 +129,15 @@ Dans Netlify, configurez les variables SMTP (`SMTP_USER`, `SMTP_PASS`, `SMTP_HOS
 
 Pour vérifier l'envoi, consultez les logs Netlify de `checkout-confirm` et `stripe-webhook`, puis la table `public.stripe_order_email_deliveries`. Les colonnes `merchant_email_status` et `customer_email_status` doivent être `sent`; `merchant_email_error` ou `customer_email_error` explique un échec.
 
+#### Renvoi manuel (si les emails site n’étaient pas partis)
+```http
+POST https://mrz-perfume.fr/api/order-emails/retry
+Content-Type: application/json
+
+{ "sessionId": "cs_...." }
+```
+Cela remet les statuts à `pending` puis renvoie les emails boutique + client pour une session Stripe déjà payée.
+
 Exécutez le fichier `supabase/stripe-order-email-notifications.sql` dans le SQL Editor Supabase après le déploiement. Il crée la table de suivi idempotente utilisée par les deux fonctions.
 
 ### Important : URL du webhook

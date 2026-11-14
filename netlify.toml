@@ -93,6 +93,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/order-emails/retry"
+  to = "/.netlify/functions/order-email-retry"
+  status = 200
+
+[[redirects]]
   from = "/api/coupons/preview"
   to = "/.netlify/functions/coupons"
   status = 200
