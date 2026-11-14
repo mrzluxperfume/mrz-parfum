@@ -3,6 +3,7 @@ import { ImagePlus, Pencil, Plus, Trash2, X } from 'lucide-react'
 import Button from '../../components/ui/Button'
 import { useCatalog } from '../../context/CatalogContext'
 import { useCollections } from '../../context/CollectionsContext'
+import { persistCatalogImage } from '../../lib/productImages'
 import { formatPrice } from '../../utils/format'
 import { formatVolume, slugify } from '../../utils/productModel'
 
@@ -93,6 +94,7 @@ export default function AdminProductsPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
   const photoInputRef = useRef(null)
 
   const filtered = useMemo(() => {
@@ -167,8 +169,9 @@ export default function AdminProductsPage() {
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    if (saving) return
     if (!form.name.trim()) {
       setError('Le nom du produit est requis.')
       return
@@ -197,33 +200,51 @@ export default function AdminProductsPage() {
 
     const col =
       collections.find((c) => c.slug === form.collectionSlug) || collections[0]
-    const payload = {
-      name: form.name.trim(),
-      slug: slugify(form.name),
-      image: form.image.trim(),
-      brand: col?.name || '',
-      category: col?.name || '',
-      categorySlug: col?.slug || '',
-      collection: col?.name || '',
-      collectionSlug: col?.slug || '',
-      description: form.description.trim() || null,
-      fragranceNotes: {
-        top: form.noteTop.trim(),
-        heart: form.noteHeart.trim(),
-        base: form.noteBase.trim(),
-      },
-      featured: form.featured,
-      newProduct: form.newProduct,
-      inStock: form.inStock,
-      sizes: preparedSizes,
-    }
+    const productSlug = slugify(form.name)
 
-    if (editingId != null) {
-      updateProduct(editingId, payload)
-    } else {
-      addProduct(payload)
+    setSaving(true)
+    setError('')
+    try {
+      const image = await persistCatalogImage(form.image.trim(), {
+        folder: 'products',
+        name: productSlug || `product-${editingId || Date.now()}`,
+      })
+
+      const payload = {
+        name: form.name.trim(),
+        slug: productSlug,
+        image,
+        brand: col?.name || '',
+        category: col?.name || '',
+        categorySlug: col?.slug || '',
+        collection: col?.name || '',
+        collectionSlug: col?.slug || '',
+        description: form.description.trim() || null,
+        fragranceNotes: {
+          top: form.noteTop.trim(),
+          heart: form.noteHeart.trim(),
+          base: form.noteBase.trim(),
+        },
+        featured: form.featured,
+        newProduct: form.newProduct,
+        inStock: form.inStock,
+        sizes: preparedSizes,
+      }
+
+      if (editingId != null) {
+        await updateProduct(editingId, payload)
+      } else {
+        await addProduct(payload)
+      }
+      closeForm()
+    } catch (err) {
+      setError(
+        err?.message ||
+          'Impossible d’enregistrer le produit et son image en base.',
+      )
+    } finally {
+      setSaving(false)
     }
-    closeForm()
   }
 
   const handleDelete = (product) => {
@@ -620,14 +641,19 @@ export default function AdminProductsPage() {
             )}
 
             <div className="mt-6 flex gap-3">
-              <Button type="submit" className="flex-1">
-                {editingId != null ? 'Enregistrer' : 'Ajouter'}
+              <Button type="submit" className="flex-1" disabled={saving}>
+                {saving
+                  ? 'Enregistrement…'
+                  : editingId != null
+                    ? 'Enregistrer'
+                    : 'Ajouter'}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={closeForm}
                 className="flex-1"
+                disabled={saving}
               >
                 Annuler
               </Button>

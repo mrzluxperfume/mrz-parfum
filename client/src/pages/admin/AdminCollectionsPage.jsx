@@ -3,6 +3,8 @@ import { ImagePlus, Plus, Trash2, X } from 'lucide-react'
 import Button from '../../components/ui/Button'
 import { useCatalog } from '../../context/CatalogContext'
 import { useCollections } from '../../context/CollectionsContext'
+import { persistCatalogImage } from '../../lib/productImages'
+import { slugify } from '../../utils/productModel'
 
 function readImportedPhoto(file) {
   return new Promise((resolve, reject) => {
@@ -41,6 +43,7 @@ export default function AdminCollectionsPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
   const photoInputRef = useRef(null)
 
   const counts = useMemo(() => {
@@ -75,18 +78,36 @@ export default function AdminCollectionsPage() {
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    if (saving) return
     if (!form.name.trim()) {
       setError('Le nom de la collection est requis.')
       return
     }
-    addCollection({
-      name: form.name.trim(),
-      description: form.description.trim(),
-      image: form.image,
-    })
-    setFormOpen(false)
+
+    setSaving(true)
+    setError('')
+    try {
+      const name = form.name.trim()
+      const image = await persistCatalogImage(form.image, {
+        folder: 'collections',
+        name: slugify(name) || `collection-${Date.now()}`,
+      })
+      await addCollection({
+        name,
+        description: form.description.trim(),
+        image,
+      })
+      setFormOpen(false)
+    } catch (err) {
+      setError(
+        err?.message ||
+          'Impossible d’enregistrer la collection et son image en base.',
+      )
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleDelete = (collection) => {
@@ -271,14 +292,15 @@ export default function AdminCollectionsPage() {
             )}
 
             <div className="mt-6 flex gap-3">
-              <Button type="submit" className="flex-1">
-                Ajouter
+              <Button type="submit" className="flex-1" disabled={saving}>
+                {saving ? 'Enregistrement…' : 'Ajouter'}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setFormOpen(false)}
                 className="flex-1"
+                disabled={saving}
               >
                 Annuler
               </Button>
