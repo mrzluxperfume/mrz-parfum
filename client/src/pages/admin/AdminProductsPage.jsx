@@ -267,10 +267,17 @@ export default function AdminProductsPage() {
       }
       closeForm()
     } catch (err) {
-      setError(
-        err?.message ||
-          'Impossible d’enregistrer le produit et son image en base.',
-      )
+      const message = String(err?.message || '')
+      if (/match_profile/i.test(message)) {
+        setError(
+          'Colonne manquante dans Supabase : exécutez le fichier supabase/product-match-profile.sql dans le SQL Editor, puis réessayez.',
+        )
+      } else {
+        setError(
+          message ||
+            'Impossible d’enregistrer le produit et son image en base.',
+        )
+      }
     } finally {
       setSaving(false)
     }
