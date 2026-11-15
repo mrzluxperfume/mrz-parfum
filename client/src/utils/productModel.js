@@ -1,3 +1,4 @@
+import { normalizeMatchProfile } from '../data/matchmaker'
 import { resolveProductImage } from '../lib/productImageUrl'
 
 /** @deprecated kept for any leftover imports — volumes are free-form now */
@@ -90,6 +91,9 @@ export function normalizeProduct(raw) {
     newProduct: Boolean(raw.newProduct),
     fragranceNotes: normalizeFragranceNotes(raw.fragranceNotes),
     description: raw.description ?? null,
+    matchProfile: normalizeMatchProfile(
+      raw.matchProfile || raw.match_profile || null,
+    ),
   }
 
   // Drop dead mrz-perfume.com WordPress URLs — real photos must be re-uploaded.

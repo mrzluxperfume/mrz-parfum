@@ -33,6 +33,7 @@ create table if not exists public.products (
   new_product boolean not null default false,
   fragrance_notes text,
   description text,
+  match_profile jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

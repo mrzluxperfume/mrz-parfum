@@ -388,14 +388,26 @@ function Results({ answers, results, onRestart }) {
       )}
 
       <h1 className="mt-8 font-title text-[34px] font-medium uppercase leading-[0.95] tracking-tight md:text-[48px]">
-        Trois parfums
-        <br />
-        pour vous
+        {results.length > 0 ? (
+          <>
+            {results.length === 1 ? 'Un parfum' : `${results.length} parfums`}
+            <br />
+            pour vous
+          </>
+        ) : (
+          <>
+            Aucun parfum
+            <br />
+            trouvé
+          </>
+        )}
       </h1>
       <p className="mt-4 max-w-lg text-sm leading-relaxed text-ink/65">
-        {summary
-          ? `Profil ${summary.toLowerCase()}. Trois propositions issues du catalogue MRZ.`
-          : 'Trois propositions issues du catalogue MRZ, selon vos réponses.'}
+        {results.length > 0
+          ? summary
+            ? `Profil ${summary.toLowerCase()}. Sélection basée uniquement sur les parfums configurés pour ce quiz.`
+            : 'Sélection basée uniquement sur les parfums configurés pour ce quiz.'
+          : 'Aucun parfum configuré ne correspond exactement à vos réponses. Essayez d’autres critères, ou complétez la configuration des produits dans l’admin.'}
       </p>
 
       <ul className="mt-8 divide-y divide-ink/10 border-t border-ink/10">
@@ -451,12 +463,6 @@ function Results({ answers, results, onRestart }) {
           </li>
         ))}
       </ul>
-
-      {results.length === 0 && (
-        <p className="mt-8 text-sm text-ink/60">
-          Aucun parfum ne correspond encore à ces critères.
-        </p>
-      )}
 
       <button
         type="button"

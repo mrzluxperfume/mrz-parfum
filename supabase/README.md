@@ -15,6 +15,9 @@
 Pour enregistrer les photos produits / collections (admin → Storage + URL en base) :
 collez aussi `supabase/product-images-storage.sql` puis **Run**.
 
+Pour le quiz « Trouver mon parfum » (profil par produit dans l’admin) :
+collez aussi `supabase/product-match-profile.sql` puis **Run**.
+
 Si le projet existait déjà avec l’ancienne policy ouverte sur `customers` :
 collez aussi `supabase/secure-customers.sql` puis **Run**.
 

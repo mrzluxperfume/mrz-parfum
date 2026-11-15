@@ -72,35 +72,76 @@ export const questions = [
   },
 ]
 
-const NAME_TAGS = [
-  [/vanille|vanilla|marshmallow|sh.?mallow|fluff|po[eè]me|d[eé]licieuse/i, ['gourmand']],
-  [/oud|bois/i, ['boise']],
-  [/ambre|amber|gold/i, ['ambre']],
-  [/rose|jasmin|jasm|yara|fleur|bella|grenade/i, ['floral']],
-  [/musc|musk|powder|poudre|paudrey/i, ['musque']],
-  [/citrus|frais|diamond|bahar/i, ['frais']],
-  [/fruit|grenade|berry|blueberry|passion/i, ['fruite']],
-  [/noir|black|nuit|feu|cuir|fum|rouge/i, ['cuir']],
+/** Options réutilisées dans l’admin produit. */
+export const MATCH_UNIVERS = questions[0].options
+export const MATCH_MOMENTS = questions[1].options
+export const MATCH_PRESENCE = questions[3].options
+export const MATCH_TRAITS = [
+  { id: 'sucre', label: 'Profil sucré / gourmand' },
+  { id: 'puissant', label: 'Sillage puissant' },
+  { id: 'oud', label: 'Contient de l’oud' },
+  { id: 'fleuri', label: 'Profil très fleuri' },
 ]
 
-const MOMENT_TAGS = {
-  terrasse: ['frais', 'fruite', 'floral'],
-  bureau: ['musque', 'frais'],
-  diner: ['ambre', 'gourmand', 'floral'],
-  air: ['frais', 'boise'],
-  nuit: ['cuir', 'ambre', 'boise'],
-  occasion: ['ambre', 'floral', 'cuir'],
+const UNIVERS_IDS = new Set(MATCH_UNIVERS.map((o) => o.id))
+const MOMENT_IDS = new Set(MATCH_MOMENTS.map((o) => o.id))
+const PRESENCE_IDS = new Set(MATCH_PRESENCE.map((o) => o.id))
+const TRAIT_IDS = new Set(MATCH_TRAITS.map((o) => o.id))
+
+export function emptyMatchProfile() {
+  return {
+    univers: [],
+    moments: [],
+    presence: '',
+    traits: [],
+  }
+}
+
+export function normalizeMatchProfile(raw) {
+  let value = raw
+  if (!value) return emptyMatchProfile()
+  if (typeof value === 'string') {
+    try {
+      value = JSON.parse(value)
+    } catch {
+      return emptyMatchProfile()
+    }
+  }
+  if (typeof value !== 'object') return emptyMatchProfile()
+
+  const univers = Array.isArray(value.univers)
+    ? [...new Set(value.univers.map(String).filter((id) => UNIVERS_IDS.has(id)))]
+    : []
+  const moments = Array.isArray(value.moments)
+    ? [...new Set(value.moments.map(String).filter((id) => MOMENT_IDS.has(id)))]
+    : []
+  const traits = Array.isArray(value.traits)
+    ? [...new Set(value.traits.map(String).filter((id) => TRAIT_IDS.has(id)))]
+    : []
+  const presence = PRESENCE_IDS.has(String(value.presence || ''))
+    ? String(value.presence)
+    : ''
+
+  return { univers, moments, presence, traits }
+}
+
+/** Un produit n’entre dans le quiz que s’il a une vraie config admin. */
+export function hasMatchConfiguration(product) {
+  const profile = normalizeMatchProfile(product?.matchProfile)
+  return (
+    profile.univers.length > 0 &&
+    profile.moments.length > 0 &&
+    Boolean(profile.presence)
+  )
 }
 
 export function productTags(product) {
-  const tags = new Set()
-  const text = `${product.name} ${product.collection || ''} ${product.description || ''}`
-  for (const [pattern, list] of NAME_TAGS) {
-    if (pattern.test(text)) list.forEach((tag) => tags.add(tag))
-  }
-  if (product.collectionSlug === 'body-splash') tags.add('musque')
-  if (product.collectionSlug === 'room-diffuseur') tags.add('frais')
-  return tags
+  return new Set(normalizeMatchProfile(product?.matchProfile).univers)
+}
+
+function intersects(a = [], b = []) {
+  const setB = new Set(b)
+  return a.some((id) => setB.has(id))
 }
 
 function inBudget(price, budget) {
@@ -111,67 +152,91 @@ function inBudget(price, budget) {
   return true
 }
 
-function scoreProduct(product, answers) {
-  const tags = productTags(product)
-  let score = 36
+/**
+ * Filtre strict : uniquement les produits configurés qui matchent
+ * exactement les réponses du quiz (univers, moments, présence, traits, budget).
+ */
+function matchesAnswersExactly(product, answers) {
+  if (!hasMatchConfiguration(product)) return false
+  if (!product.inStock) return false
+  if (typeof product.price !== 'number') return false
+  if (!inBudget(product.price, answers.budget)) return false
+
+  const profile = normalizeMatchProfile(product.matchProfile)
+  const wantedUnivers = answers.univers || []
+  const wantedMoments = answers.moments || []
+  const avoid = (answers.avoid || []).filter((id) => id !== 'aucun')
+  const presence = answers.presence
+
+  // Univers : au moins un univers sélectionné doit être dans la config produit.
+  if (wantedUnivers.length > 0 && !intersects(profile.univers, wantedUnivers)) {
+    return false
+  }
+
+  // Moments : au moins un moment sélectionné doit être dans la config produit.
+  if (wantedMoments.length > 0 && !intersects(profile.moments, wantedMoments)) {
+    return false
+  }
+
+  // Présence : doit être identique à celle configurée sur le produit.
+  if (presence && profile.presence !== presence) {
+    return false
+  }
+
+  // Évitements : si le produit porte un trait évité, on l’exclut.
+  for (const trait of avoid) {
+    if (profile.traits.includes(trait)) return false
+  }
+
+  return true
+}
+
+function scoreConfiguredMatch(product, answers) {
+  const profile = normalizeMatchProfile(product.matchProfile)
+  let score = 0
 
   for (const id of answers.univers || []) {
-    if (tags.has(id)) score += 24
+    if (profile.univers.includes(id)) score += 40
   }
   for (const id of answers.moments || []) {
-    const wanted = MOMENT_TAGS[id] || []
-    if (wanted.some((tag) => tags.has(tag))) score += 14
+    if (profile.moments.includes(id)) score += 30
+  }
+  if (answers.presence && profile.presence === answers.presence) score += 35
+
+  // Bonus if product univers is subset of answers (more precise).
+  if (
+    (answers.univers || []).length > 0 &&
+    profile.univers.every((id) => (answers.univers || []).includes(id))
+  ) {
+    score += 12
   }
 
-  const avoid = answers.avoid || []
-  if (avoid.includes('sucre') && tags.has('gourmand')) score -= 34
-  if (avoid.includes('oud') && /oud/i.test(product.name)) score -= 40
-  if (avoid.includes('fleuri') && tags.has('floral')) score -= 30
-  if (avoid.includes('puissant')) {
-    if (tags.has('cuir') || tags.has('boise') || product.price >= 50) score -= 22
-  }
-
-  const presence = answers.presence
-  if (presence === 'discrete') {
-    if (product.collectionSlug === 'body-splash' || tags.has('musque') || tags.has('frais')) {
-      score += 16
-    }
-    if (product.price >= 50) score -= 10
-  }
-  if (presence === 'equilibree') {
-    if (product.price >= 20 && product.price <= 45) score += 14
-  }
-  if (presence === 'affirmee') {
-    if (product.price > 40 || tags.has('cuir') || tags.has('boise') || tags.has('ambre')) {
-      score += 16
-    }
-  }
-
-  if (product.collectionSlug === 'room-diffuseur') score -= 18
-  if (!product.inStock) score -= 50
   return score
 }
 
 export function recommendPerfumes(products, answers) {
-  const priced = products.filter(
-    (product) =>
-      product.collectionSlug !== 'body-splash' &&
-      product.categorySlug !== 'body-splash' &&
-      typeof product.price === 'number',
-  )
-  let pool = priced.filter((product) => inBudget(product.price, answers.budget))
-  if (pool.length < 3) pool = priced
+  const configured = (products || []).filter(hasMatchConfiguration)
+  if (configured.length === 0) return []
 
-  const ranked = pool
-    .map((product) => ({ product, score: scoreProduct(product, answers) }))
+  const matches = configured
+    .filter((product) => matchesAnswersExactly(product, answers))
+    .map((product) => ({
+      product,
+      score: scoreConfiguredMatch(product, answers),
+    }))
     .sort((a, b) => b.score - a.score || a.product.price - b.product.price)
 
-  const top = ranked.slice(0, 3)
+  if (matches.length === 0) return []
+
+  const top = matches.slice(0, 3)
   const best = top[0]?.score || 1
 
   return top.map((item) => ({
     product: item.product,
-    affinity: Math.max(70, Math.min(96, Math.round((item.score / best) * 94))),
+    affinity: Math.max(
+      72,
+      Math.min(98, Math.round((item.score / Math.max(best, 1)) * 96)),
+    ),
   }))
 }
 

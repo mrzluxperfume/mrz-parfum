@@ -36,6 +36,7 @@ export function productFromRow(row) {
     newProduct: Boolean(row.new_product),
     fragranceNotes: row.fragrance_notes ?? null,
     description: row.description ?? null,
+    matchProfile: row.match_profile ?? null,
   }
 }
 
@@ -70,6 +71,12 @@ export function productToRow(product) {
     new_product: Boolean(product.newProduct),
     fragrance_notes: fragranceNotesToDb(product.fragranceNotes),
     description: product.description ?? null,
+    match_profile: product.matchProfile || {
+      univers: [],
+      moments: [],
+      presence: '',
+      traits: [],
+    },
   }
 }
 

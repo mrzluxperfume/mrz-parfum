@@ -3,6 +3,13 @@ import { ImagePlus, Pencil, Plus, Trash2, X } from 'lucide-react'
 import Button from '../../components/ui/Button'
 import { useCatalog } from '../../context/CatalogContext'
 import { useCollections } from '../../context/CollectionsContext'
+import {
+  MATCH_MOMENTS,
+  MATCH_PRESENCE,
+  MATCH_TRAITS,
+  MATCH_UNIVERS,
+  emptyMatchProfile,
+} from '../../data/matchmaker'
 import { persistCatalogImage } from '../../lib/productImages'
 import { formatPrice } from '../../utils/format'
 import { formatVolume, slugify } from '../../utils/productModel'
@@ -32,7 +39,17 @@ const emptyForm = (collections = []) => ({
   newProduct: true,
   inStock: true,
   sizes: [emptySize('', '', true)],
+  matchUnivers: [],
+  matchMoments: [],
+  matchPresence: '',
+  matchTraits: [],
 })
+
+function toggleListValue(list, id, max = Infinity) {
+  if (list.includes(id)) return list.filter((value) => value !== id)
+  if (list.length >= max) return list
+  return [...list, id]
+}
 
 function readImportedPhoto(file) {
   return new Promise((resolve, reject) => {
@@ -71,6 +88,8 @@ function productToForm(product, collections = []) {
         )
       : [emptySize(product.volume || '', product.price ? String(product.price) : '', true)]
 
+  const match = product.matchProfile || emptyMatchProfile()
+
   return {
     name: product.name || '',
     image: product.image || '',
@@ -83,6 +102,10 @@ function productToForm(product, collections = []) {
     newProduct: Boolean(product.newProduct),
     inStock: product.inStock !== false,
     sizes,
+    matchUnivers: Array.isArray(match.univers) ? match.univers : [],
+    matchMoments: Array.isArray(match.moments) ? match.moments : [],
+    matchPresence: match.presence || '',
+    matchTraits: Array.isArray(match.traits) ? match.traits : [],
   }
 }
 
@@ -229,6 +252,12 @@ export default function AdminProductsPage() {
         newProduct: form.newProduct,
         inStock: form.inStock,
         sizes: preparedSizes,
+        matchProfile: {
+          univers: form.matchUnivers,
+          moments: form.matchMoments,
+          presence: form.matchPresence,
+          traits: form.matchTraits,
+        },
       }
 
       if (editingId != null) {
@@ -529,6 +558,156 @@ export default function AdminProductsPage() {
                       placeholder="Ex. Cuir"
                     />
                   </Field>
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-[11px] uppercase tracking-[0.14em] text-ink/70">
+                  Trouver mon parfum
+                </p>
+                <p className="mb-3 text-xs text-ink/55">
+                  Obligatoire pour apparaître dans « Trouver mon parfum » :
+                  au moins un univers, un moment et une présence. Sans cela,
+                  le produit est ignoré par le quiz.
+                </p>
+                <div className="space-y-4 border border-ink/10 p-3">
+                  <div>
+                    <p className="mb-2 text-[11px] uppercase tracking-[0.12em] text-ink/60">
+                      Univers olfactif
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {MATCH_UNIVERS.map((option) => {
+                        const active = form.matchUnivers.includes(option.id)
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() =>
+                              setForm((prev) => ({
+                                ...prev,
+                                matchUnivers: toggleListValue(
+                                  prev.matchUnivers,
+                                  option.id,
+                                  4,
+                                ),
+                              }))
+                            }
+                            className={[
+                              'border px-2.5 py-1.5 text-[10px] uppercase tracking-[0.1em] transition',
+                              active
+                                ? 'border-ink bg-ink text-white'
+                                : 'border-ink/20 text-ink hover:border-ink',
+                            ].join(' ')}
+                          >
+                            {option.caption || option.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="mb-2 text-[11px] uppercase tracking-[0.12em] text-ink/60">
+                      Moments adaptés
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {MATCH_MOMENTS.map((option) => {
+                        const active = form.matchMoments.includes(option.id)
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() =>
+                              setForm((prev) => ({
+                                ...prev,
+                                matchMoments: toggleListValue(
+                                  prev.matchMoments,
+                                  option.id,
+                                  4,
+                                ),
+                              }))
+                            }
+                            className={[
+                              'border px-2.5 py-1.5 text-[10px] uppercase tracking-[0.1em] transition',
+                              active
+                                ? 'border-ink bg-ink text-white'
+                                : 'border-ink/20 text-ink hover:border-ink',
+                            ].join(' ')}
+                          >
+                            {option.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="mb-2 text-[11px] uppercase tracking-[0.12em] text-ink/60">
+                      Présence / sillage
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {MATCH_PRESENCE.map((option) => {
+                        const active = form.matchPresence === option.id
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() =>
+                              setForm((prev) => ({
+                                ...prev,
+                                matchPresence:
+                                  prev.matchPresence === option.id
+                                    ? ''
+                                    : option.id,
+                              }))
+                            }
+                            className={[
+                              'border px-2.5 py-1.5 text-[10px] uppercase tracking-[0.1em] transition',
+                              active
+                                ? 'border-ink bg-ink text-white'
+                                : 'border-ink/20 text-ink hover:border-ink',
+                            ].join(' ')}
+                          >
+                            {option.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="mb-2 text-[11px] uppercase tracking-[0.12em] text-ink/60">
+                      Traits (évitements du quiz)
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {MATCH_TRAITS.map((option) => {
+                        const active = form.matchTraits.includes(option.id)
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() =>
+                              setForm((prev) => ({
+                                ...prev,
+                                matchTraits: toggleListValue(
+                                  prev.matchTraits,
+                                  option.id,
+                                ),
+                              }))
+                            }
+                            className={[
+                              'border px-2.5 py-1.5 text-[10px] uppercase tracking-[0.1em] transition',
+                              active
+                                ? 'border-ink bg-ink text-white'
+                                : 'border-ink/20 text-ink hover:border-ink',
+                            ].join(' ')}
+                          >
+                            {option.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
 
