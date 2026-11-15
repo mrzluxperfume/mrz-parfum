@@ -74,6 +74,7 @@ export default function SeoHead() {
     upsertMeta('property', 'og:image', seo.image)
     upsertMeta('property', 'og:locale', 'fr_FR')
     upsertMeta('property', 'og:site_name', SITE_NAME)
+    upsertMeta('name', 'application-name', SITE_NAME)
     upsertMeta('name', 'twitter:card', 'summary_large_image')
     upsertMeta('name', 'twitter:title', seo.title)
     upsertMeta('name', 'twitter:description', seo.description)

@@ -1,10 +1,12 @@
 export const SITE = 'https://mrz-perfume.fr'
-export const SITE_NAME = 'MRZ Perfume'
-export const DEFAULT_TITLE =
-  'MRZ Perfume Parfums de luxe aux fragrances uniques'
+/** Google site name / snippet brand — matches former mrz-perfume.com SERP. */
+export const SITE_NAME = 'MRZ LUXURY PERFUME'
+export const DEFAULT_TITLE = 'MRZ LUXURY PERFUME'
 export const DEFAULT_DESCRIPTION =
-  'Découvrez MRZ Perfume et nos parfums aux fragrances élégantes et captivantes. Trouvez votre signature olfactive et laissez votre parfum parler pour vous.'
+  'MRZ Luxury Perfume offers premium fragrances crafted for elegance and confidence. Discover long-lasting scents designed for modern taste.'
 export const DEFAULT_IMAGE = `${SITE}/hero/slide1-photo1.webp`
+export const LOGO_URL = `${SITE}/logonav2.png`
+export const FAVICON_URL = `${SITE}/favicon-mrz.png`
 
 const PRIVATE_PREFIXES = ['/cart', '/account', '/admin']
 
@@ -18,19 +20,20 @@ const STATIC_PAGES = {
     title: 'Boutique',
     description: 'Tous les parfums et collections de la maison.',
   },
-  '/collections': {
-    title: 'Collections',
-    description:
-      "Explorez les univers de la maison : Lamas, Maison MRZ, Collection Dubai, Body Splash et Parfum d'intérieur.",
-  },
   '/trouver-mon-parfum': {
     title: 'Trouver mon parfum',
     description:
       'Cinq questions, quelques instants, trois fragrances choisies dans la collection MRZ pour ce que vous cherchez vraiment.',
   },
   '/about': {
-    title: 'Qui sommes-nous',
-    description: 'Bienvenue dans l’univers MRZ.',
+    title: 'À propos de nous',
+    description:
+      'Parfum Française MRZ propose des fragrances élégantes et captivantes. Découvrez l’univers MRZ Luxury Perfume.',
+  },
+  '/collections': {
+    title: 'Marques',
+    description:
+      'Découvrez la marque MRZ PERFUME : Lamas, Maison MRZ, Collection Dubai, Body Splash et Parfum d’intérieur.',
   },
   '/about/histoire': {
     title: 'Notre histoire',
@@ -41,8 +44,9 @@ const STATIC_PAGES = {
     description: 'Les mots de celles et ceux qui portent MRZ.',
   },
   '/blog': {
-    title: 'Quel parfum est fait pour vous ?',
-    description: 'Le petit guide pour trouver une fragrance qui vous ressemble.',
+    title: 'Parfum de Luxe',
+    description:
+      'Explorez le parfum de luxe avec MRZ Perfume. Découvrez des fragrances élégantes et captivantes.',
   },
   '/blog/concentrations': {
     title: 'Eau de parfum, eau de toilette, extrait de parfum',
@@ -135,7 +139,11 @@ export function resolveSeo({ pathname, product, collection }) {
             name: product.name,
             image: product.image ? [absoluteUrl(product.image)] : undefined,
             description,
-            brand: { '@type': 'Brand', name: SITE_NAME },
+            brand: {
+              '@type': 'Brand',
+              name: SITE_NAME,
+              alternateName: 'MRZ Perfume',
+            },
             offers: {
               '@type': 'Offer',
               url: canonical,
@@ -216,15 +224,61 @@ export function resolveSeo({ pathname, product, collection }) {
   }
 }
 
+/** Primary links Google may promote as sitelinks (same roles as old .com SERP). */
+const HOME_NAV_LINKS = [
+  {
+    name: 'Musc Blanc',
+    url: `${SITE}/product/musc-blanc`,
+    description:
+      'Un musc blanc pur et lumineux, comme une caresse sur la peau.',
+  },
+  {
+    name: 'Parfum de Luxe',
+    url: `${SITE}/blog`,
+    description:
+      'Explorez le parfum de luxe avec MRZ Perfume. Découvrez des fragrances élégantes.',
+  },
+  {
+    name: 'À propos de nous',
+    url: `${SITE}/about`,
+    description:
+      'Parfum Française MRZ propose des fragrances élégantes et captivantes.',
+  },
+  {
+    name: 'Marques',
+    url: `${SITE}/collections`,
+    description:
+      'Découvrez la marque MRZ PERFUME : Lamas, Maison MRZ, Collection Dubai.',
+  },
+  {
+    name: 'MUSC Ambre',
+    url: `${SITE}/product/musc-ambre`,
+    description:
+      'Un musc ambré chaud et charnel, comme une seconde peau.',
+  },
+  {
+    name: 'Boutique',
+    url: `${SITE}/shop`,
+    description: 'Tous les parfums et collections de la maison.',
+  },
+]
+
 function homeJsonLd() {
   return {
     '@context': 'https://schema.org',
     '@graph': [
       {
         '@type': 'Organization',
+        '@id': `${SITE}/#organization`,
         name: SITE_NAME,
+        alternateName: ['MRZ Perfume', 'MRZ Luxury Perfume', 'Maison MRZ'],
+        legalName: 'MRZ Luxury Perfume',
         url: SITE,
-        logo: `${SITE}/logonav2.png`,
+        logo: {
+          '@type': 'ImageObject',
+          url: LOGO_URL,
+        },
+        image: LOGO_URL,
         email: 'mrz.lux.perfume@gmail.com',
         sameAs: [
           'https://www.instagram.com/mrz_perfume_/',
@@ -234,8 +288,33 @@ function homeJsonLd() {
       },
       {
         '@type': 'WebSite',
+        '@id': `${SITE}/#website`,
         name: SITE_NAME,
+        alternateName: 'MRZ Perfume',
         url: SITE,
+        description: DEFAULT_DESCRIPTION,
+        publisher: { '@id': `${SITE}/#organization` },
+        inLanguage: 'fr-FR',
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: `${SITE}/shop?q={search_term_string}`,
+          },
+          'query-input': 'required name=search_term_string',
+        },
+      },
+      {
+        '@type': 'ItemList',
+        '@id': `${SITE}/#sitelinks`,
+        name: 'Navigation principale',
+        itemListElement: HOME_NAV_LINKS.map((link, index) => ({
+          '@type': 'SiteNavigationElement',
+          position: index + 1,
+          name: link.name,
+          description: link.description,
+          url: link.url,
+        })),
       },
     ],
   }
