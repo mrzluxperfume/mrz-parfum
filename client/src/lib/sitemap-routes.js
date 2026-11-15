@@ -27,8 +27,9 @@ export function sitemapPaths() {
 
   for (const collection of collections) {
     if (collection.slug === HIDDEN_COLLECTION) continue
-    paths.push(`/collection/${collection.slug}`)
-    paths.push(`/category/${collection.slug}`)
+    // Trailing slash matches Netlify static SEO folders (avoids Google redirect errors).
+    paths.push(`/collection/${collection.slug}/`)
+    paths.push(`/category/${collection.slug}/`)
   }
 
   const slugs = new Set()
@@ -42,7 +43,7 @@ export function sitemapPaths() {
       continue
     }
     slugs.add(product.slug)
-    paths.push(`/product/${product.slug}`)
+    paths.push(`/product/${product.slug}/`)
   }
 
   return paths

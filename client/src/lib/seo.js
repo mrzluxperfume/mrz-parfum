@@ -104,9 +104,23 @@ export function isPrivatePath(pathname) {
   )
 }
 
+/** Netlify serves static SEO folders with a trailing slash (/product/slug/). */
+function canonicalPath(pathname) {
+  const path = pathname.split('?')[0].replace(/\/$/, '') || '/'
+  if (path === '/') return '/'
+  if (
+    path.startsWith('/product/') ||
+    path.startsWith('/collection/') ||
+    path.startsWith('/category/')
+  ) {
+    return `${path}/`
+  }
+  return path
+}
+
 export function resolveSeo({ pathname, product, collection }) {
   const path = pathname.split('?')[0].replace(/\/$/, '') || '/'
-  const canonical = `${SITE}${path === '/' ? '/' : path}`
+  const canonical = `${SITE}${canonicalPath(pathname)}`
   const noindex = isPrivatePath(path)
 
   if (path.startsWith('/product/')) {
@@ -228,7 +242,7 @@ export function resolveSeo({ pathname, product, collection }) {
 const HOME_NAV_LINKS = [
   {
     name: 'Musc Blanc',
-    url: `${SITE}/product/musc-blanc`,
+    url: `${SITE}/product/musc-blanc/`,
     description:
       'Un musc blanc pur et lumineux, comme une caresse sur la peau.',
   },
@@ -252,7 +266,7 @@ const HOME_NAV_LINKS = [
   },
   {
     name: 'MUSC Ambre',
-    url: `${SITE}/product/musc-ambre`,
+    url: `${SITE}/product/musc-ambre/`,
     description:
       'Un musc ambré chaud et charnel, comme une seconde peau.',
   },
