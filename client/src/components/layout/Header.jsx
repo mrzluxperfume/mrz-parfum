@@ -17,6 +17,7 @@ import { useCart } from '../../context/CartContext'
 import { cn, formatPrice } from '../../utils/format'
 import ProductImage from '../product/ProductImage'
 import BrandLogo from './BrandLogo'
+import { categoryPath, productPath } from '../../lib/seo'
 
 const SEARCH_LIMIT = 6
 
@@ -41,7 +42,7 @@ function SearchResults({ results, query, onSelect, onSeeAll }) {
           {results.map((product) => (
             <li key={product.id}>
               <Link
-                to={`/product/${product.slug}`}
+                to={productPath(product.slug)}
                 onClick={onSelect}
                 className="flex items-center gap-3 border-b border-ink/5 px-3 py-2.5 transition hover:bg-fog"
               >
@@ -266,7 +267,7 @@ export default function Header() {
                   : item.type === 'dropdown'
                     ? collections.map((collection) => ({
                         label: collection.name,
-                        href: `/category/${collection.slug}`,
+                        href: categoryPath(collection.slug),
                       }))
                     : null
 
@@ -448,7 +449,7 @@ export default function Header() {
                       : item.type === 'dropdown'
                         ? collections.map((collection) => ({
                             label: collection.name,
-                            href: `/category/${collection.slug}`,
+                            href: categoryPath(collection.slug),
                           }))
                         : null
 

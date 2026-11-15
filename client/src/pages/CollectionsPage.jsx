@@ -5,6 +5,7 @@ import Button from '../components/ui/Button'
 import { brand } from '../data/brand'
 import { useCollections } from '../context/CollectionsContext'
 import { useCatalog } from '../context/CatalogContext'
+import { collectionPath } from '../lib/seo'
 
 export default function CollectionsPage() {
   const { getProductsByCategory, getProductBySlug } = useCatalog()
@@ -80,7 +81,7 @@ export default function CollectionsPage() {
                     <div className="mt-6">
                       <Button
                         as={Link}
-                        to={`/collection/${collection.slug}`}
+                        to={collectionPath(collection.slug)}
                         variant="secondary"
                         size="sm"
                       >

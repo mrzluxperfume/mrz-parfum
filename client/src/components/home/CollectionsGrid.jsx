@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import Button from '../ui/Button'
 import Container from '../ui/Container'
 import { useCollections } from '../../context/CollectionsContext'
+import { collectionPath } from '../../lib/seo'
 
 export default function CollectionsGrid() {
   const { collections } = useCollections()
@@ -48,7 +49,7 @@ export default function CollectionsGrid() {
                   <div className="mt-6">
                     <Button
                       as={Link}
-                      to={`/collection/${collection.slug}`}
+                      to={collectionPath(collection.slug)}
                       variant="secondary"
                       size="sm"
                     >

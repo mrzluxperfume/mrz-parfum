@@ -8,6 +8,22 @@ export const DEFAULT_IMAGE = `${SITE}/hero/slide1-photo1.webp`
 export const LOGO_URL = `${SITE}/logonav2.png`
 export const FAVICON_URL = `${SITE}/favicon-mrz.png`
 
+/** Paths with trailing slash — required by Netlify static SEO folders. */
+export function productPath(slug) {
+  const s = String(slug || '').replace(/^\/+|\/+$/g, '')
+  return s ? `/product/${s}/` : '/shop'
+}
+
+export function collectionPath(slug) {
+  const s = String(slug || '').replace(/^\/+|\/+$/g, '')
+  return s ? `/collection/${s}/` : '/collections'
+}
+
+export function categoryPath(slug) {
+  const s = String(slug || '').replace(/^\/+|\/+$/g, '')
+  return s ? `/category/${s}/` : '/collections'
+}
+
 const PRIVATE_PREFIXES = ['/cart', '/account', '/admin']
 
 /** Meta taken from copy already shown on each page. */

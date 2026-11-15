@@ -7,6 +7,7 @@ import { useCart } from '../../context/CartContext'
 import { formatPrice } from '../../utils/format'
 import { getEnabledSizes } from '../../utils/productModel'
 import { collectionDisplayName } from '../../data/collections'
+import { categoryPath, productPath } from '../../lib/seo'
 
 export default function ProductCard({ product }) {
   const { addItem } = useCart()
@@ -32,7 +33,7 @@ export default function ProductCard({ product }) {
       className="group flex w-full min-w-0 flex-col gap-4"
     >
       <Link
-        to={`/product/${product.slug}`}
+        to={productPath(product.slug)}
         className="relative block overflow-hidden rounded-[var(--radius-media)] bg-fog"
       >
         <div className="aspect-square overflow-hidden">
@@ -52,13 +53,13 @@ export default function ProductCard({ product }) {
       <div className="flex flex-col gap-2">
         <div className="flex flex-col gap-1.5">
           <Link
-            to={`/category/${product.categorySlug}`}
+            to={categoryPath(product.categorySlug)}
             className="text-[12px] text-ink underline decoration-ink/30 underline-offset-2 transition hover:decoration-ink"
           >
             {collectionDisplayName(product.categorySlug, product.brand)}
           </Link>
           <Link
-            to={`/product/${product.slug}`}
+            to={productPath(product.slug)}
             className="font-title text-[12px] font-semibold uppercase tracking-[0.04em] text-ink"
           >
             {product.name}

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { collectionPath } from '../../lib/seo'
 
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -68,7 +69,9 @@ export default function ProductEditorial({ product }) {
         <p className="text-[14px] text-[#2a2a2a] md:text-[15px]">
           Catégorie{' '}
           <Link
-            to={`/collection/${product.collectionSlug || product.categorySlug}`}
+            to={collectionPath(
+              product.collectionSlug || product.categorySlug,
+            )}
             className="font-semibold text-ink transition hover:opacity-70"
           >
             {product.collectionSlug === 'room-diffuseur' ||

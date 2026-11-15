@@ -27,6 +27,7 @@ import {
 } from '../data/matchmaker'
 import { useCatalog } from '../context/CatalogContext'
 import { formatPrice } from '../utils/format'
+import { productPath } from '../lib/seo'
 
 const ICONS = {
   cake: Cake,
@@ -416,7 +417,7 @@ function Results({ answers, results, onRestart }) {
             key={product.id}
             className="grid gap-4 py-6 sm:grid-cols-[88px_1fr_auto] sm:items-center"
           >
-            <Link to={`/product/${product.slug}`} className="block bg-fog">
+            <Link to={productPath(product.slug)} className="block bg-fog">
               <ProductImage
                 product={product}
                 className="h-24 w-full object-cover sm:h-[88px] sm:w-[88px]"
@@ -426,7 +427,7 @@ function Results({ answers, results, onRestart }) {
               <p className="text-[11px] text-ink/45">N° {index + 1}</p>
               <p className="text-[11px] text-ink/55">{product.collection}</p>
               <Link
-                to={`/product/${product.slug}`}
+                to={productPath(product.slug)}
                 className="mt-1 block font-title text-lg font-semibold uppercase tracking-wide"
               >
                 {product.name}
@@ -453,7 +454,7 @@ function Results({ answers, results, onRestart }) {
             </div>
             <Button
               as={Link}
-              to={`/product/${product.slug}`}
+              to={productPath(product.slug)}
               variant="outline"
               size="sm"
               className="sm:self-end"

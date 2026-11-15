@@ -8,6 +8,7 @@ import ProductImage from '../components/product/ProductImage'
 import { useCart } from '../context/CartContext'
 import api from '../services/api'
 import { formatPrice } from '../utils/format'
+import { productPath } from '../lib/seo'
 
 const emptyCustomer = {
   name: '',
@@ -257,7 +258,7 @@ export default function CartPage() {
                     className="flex gap-4 border-b border-ink/10 pb-6"
                   >
                     <Link
-                      to={`/product/${item.slug}`}
+                      to={productPath(item.slug)}
                       className="h-24 w-24 shrink-0 overflow-hidden bg-fog"
                     >
                       <ProductImage
@@ -269,7 +270,7 @@ export default function CartPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <Link
-                            to={`/product/${item.slug}`}
+                            to={productPath(item.slug)}
                             className="font-title text-sm font-semibold uppercase tracking-wide"
                           >
                             {item.name}

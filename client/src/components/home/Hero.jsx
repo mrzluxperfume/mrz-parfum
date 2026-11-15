@@ -39,7 +39,7 @@ const heroSlides = [
         'Une présence douce et masculine, entre force maîtrisée et sensualité enveloppante.',
       cta: {
         label: 'Parfum Le Désir',
-        to: '/product/le-desir',
+        to: '/product/le-desir/',
       },
     },
   },
