@@ -133,6 +133,40 @@ export function CollectionsProvider({ children }) {
     [collections, commit],
   )
 
+  const updateCollection = useCallback(
+    async (slug, data) => {
+      const current = collections.find((c) => c.slug === slug || c.id === slug)
+      if (!current) throw new Error('Collection introuvable')
+
+      // Keep slug/id stable so products linked by collectionSlug stay valid.
+      const updated = normalizeCollection({
+        ...current,
+        ...data,
+        id: current.id,
+        slug: current.slug,
+        name: data.name ?? current.name,
+        description: data.description ?? current.description,
+        image: data.image ?? current.image,
+        tone: data.tone ?? current.tone,
+      })
+
+      if (isSupabaseConfigured && supabase) {
+        const { error } = await supabase
+          .from('collections')
+          .upsert(collectionToRow(updated), { onConflict: 'id' })
+        if (error) throw error
+      }
+
+      commit((prev) =>
+        prev.map((c) =>
+          c.slug === current.slug || c.id === current.id ? updated : c,
+        ),
+      )
+      return updated
+    },
+    [collections, commit],
+  )
+
   const deleteCollection = useCallback(
     async (slug) => {
       if (isSupabaseConfigured && supabase) {
@@ -152,9 +186,10 @@ export function CollectionsProvider({ children }) {
       collections,
       source: isSupabaseConfigured ? 'supabase' : 'local',
       addCollection,
+      updateCollection,
       deleteCollection,
     }),
-    [collections, addCollection, deleteCollection],
+    [collections, addCollection, updateCollection, deleteCollection],
   )
 
   return (

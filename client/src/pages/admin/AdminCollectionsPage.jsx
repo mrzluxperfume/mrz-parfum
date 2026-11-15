@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { ImagePlus, Plus, Trash2, X } from 'lucide-react'
+import { ImagePlus, Pencil, Plus, Trash2, X } from 'lucide-react'
 import Button from '../../components/ui/Button'
 import { useCatalog } from '../../context/CatalogContext'
 import { useCollections } from '../../context/CollectionsContext'
@@ -37,10 +37,20 @@ const emptyForm = () => ({
   image: '',
 })
 
+function collectionToForm(collection) {
+  return {
+    name: collection.name || '',
+    description: collection.description || '',
+    image: collection.image || '',
+  }
+}
+
 export default function AdminCollectionsPage() {
-  const { collections, addCollection, deleteCollection } = useCollections()
+  const { collections, addCollection, updateCollection, deleteCollection } =
+    useCollections()
   const { products } = useCatalog()
   const [formOpen, setFormOpen] = useState(false)
+  const [editingSlug, setEditingSlug] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -55,8 +65,22 @@ export default function AdminCollectionsPage() {
     return map
   }, [products])
 
+  const closeForm = () => {
+    setFormOpen(false)
+    setEditingSlug(null)
+    setError('')
+  }
+
   const openCreate = () => {
+    setEditingSlug(null)
     setForm(emptyForm())
+    setError('')
+    setFormOpen(true)
+  }
+
+  const openEdit = (collection) => {
+    setEditingSlug(collection.slug)
+    setForm(collectionToForm(collection))
     setError('')
     setFormOpen(true)
   }
@@ -92,14 +116,23 @@ export default function AdminCollectionsPage() {
       const name = form.name.trim()
       const image = await persistCatalogImage(form.image, {
         folder: 'collections',
-        name: slugify(name) || `collection-${Date.now()}`,
+        name:
+          editingSlug ||
+          slugify(name) ||
+          `collection-${Date.now()}`,
       })
-      await addCollection({
+      const payload = {
         name,
         description: form.description.trim(),
         image,
-      })
-      setFormOpen(false)
+      }
+
+      if (editingSlug) {
+        await updateCollection(editingSlug, payload)
+      } else {
+        await addCollection(payload)
+      }
+      closeForm()
     } catch (err) {
       setError(
         err?.message ||
@@ -131,7 +164,7 @@ export default function AdminCollectionsPage() {
         <div>
           <h2 className="font-display text-3xl md:text-4xl">Collections</h2>
           <p className="mt-2 text-sm text-ink/65">
-            Ajoutez ou supprimez une collection du catalogue.
+            Ajoutez, modifiez ou supprimez une collection du catalogue.
           </p>
         </div>
         <Button type="button" onClick={openCreate} className="gap-2">
@@ -178,7 +211,15 @@ export default function AdminCollectionsPage() {
                   {counts.get(collection.slug) || 0}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex justify-end">
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openEdit(collection)}
+                      className="inline-flex border border-ink/15 p-2 transition hover:border-ink"
+                      aria-label={`Modifier ${collection.name}`}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
                     <button
                       type="button"
                       onClick={() => handleDelete(collection)}
@@ -212,10 +253,12 @@ export default function AdminCollectionsPage() {
             className="max-h-[90vh] w-full max-w-lg overflow-y-auto border border-ink/10 bg-white p-6 shadow-xl"
           >
             <div className="mb-6 flex items-start justify-between gap-4">
-              <h3 className="font-display text-2xl">Nouvelle collection</h3>
+              <h3 className="font-display text-2xl">
+                {editingSlug ? 'Modifier la collection' : 'Nouvelle collection'}
+              </h3>
               <button
                 type="button"
-                onClick={() => setFormOpen(false)}
+                onClick={closeForm}
                 className="p-1 text-ink/50 hover:text-ink"
                 aria-label="Fermer"
               >
@@ -273,14 +316,25 @@ export default function AdminCollectionsPage() {
                       />
                     ) : null}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => photoInputRef.current?.click()}
-                    className="inline-flex items-center gap-2 border border-ink/20 px-3 py-2 text-[10px] uppercase tracking-[0.14em] transition hover:border-ink"
-                  >
-                    <ImagePlus className="h-3.5 w-3.5" />
-                    Importer une photo
-                  </button>
+                  <div className="flex flex-col items-start gap-2">
+                    <button
+                      type="button"
+                      onClick={() => photoInputRef.current?.click()}
+                      className="inline-flex items-center gap-2 border border-ink/20 px-3 py-2 text-[10px] uppercase tracking-[0.14em] transition hover:border-ink"
+                    >
+                      <ImagePlus className="h-3.5 w-3.5" />
+                      Importer une photo
+                    </button>
+                    {form.image ? (
+                      <button
+                        type="button"
+                        onClick={() => setForm((p) => ({ ...p, image: '' }))}
+                        className="text-xs text-ink/55 underline-offset-2 hover:text-ink hover:underline"
+                      >
+                        Retirer la photo
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             </div>
@@ -293,12 +347,16 @@ export default function AdminCollectionsPage() {
 
             <div className="mt-6 flex gap-3">
               <Button type="submit" className="flex-1" disabled={saving}>
-                {saving ? 'Enregistrement…' : 'Ajouter'}
+                {saving
+                  ? 'Enregistrement…'
+                  : editingSlug
+                    ? 'Enregistrer'
+                    : 'Ajouter'}
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setFormOpen(false)}
+                onClick={closeForm}
                 className="flex-1"
                 disabled={saving}
               >
